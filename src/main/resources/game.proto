@@ -1,0 +1,28 @@
+syntax = "proto3"; /* default is proto2 */
+
+/* *
+ * If no explicit java_package option is given in the .proto file, then by default the proto package
+ * (specified using the “package” keyword) will be used
+ * */
+option java_package = "kz.ninestones.cascade.proto";
+
+enum PlayerProto {
+  NONE = 0;
+  ONE = 1;
+  TWO = 2;
+}
+
+enum GameStatus {
+  ILLEGAL_GAME_STATE = 0;
+  ACTIVE = 1;
+  GAME_OVER_PLAYER_ONE_WON = 2;
+  GAME_OVER_PLAYER_TWO_WON = 3;
+  GAME_OVER_TIE = 4;
+}
+
+message StateProto {
+  repeated int32 cells = 1;
+  map<string, int32> score = 2;
+  map<string, int32> special_cells = 3;
+  PlayerProto nextMove = 4;
+}
