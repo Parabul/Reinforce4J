@@ -14,7 +14,7 @@ public class TicTacToeTest {
     assertThat(root.isGameOver()).isFalse();
     assertThat(root.getCurrentPlayer()).isEqualTo(Player.ONE);
     assertThat(root.getWinner()).isNull();
-    for (int i = 1; i <= 9; i++) {
+    for (int i = 0; i < 9; i++) {
       assertThat(root.isMoveAllowed(i)).isTrue();
     }
   }
@@ -32,15 +32,15 @@ public class TicTacToeTest {
   public void detectsGameOver() {
     TicTacToe root = (new TicTacToeService()).newInitialState();
 
+    root.move(0);
+    assertThat(root.isGameOver()).isFalse();
+    root.move(3);
+    assertThat(root.isGameOver()).isFalse();
     root.move(1);
     assertThat(root.isGameOver()).isFalse();
     root.move(4);
     assertThat(root.isGameOver()).isFalse();
     root.move(2);
-    assertThat(root.isGameOver()).isFalse();
-    root.move(5);
-    assertThat(root.isGameOver()).isFalse();
-    root.move(3);
     assertThat(root.isGameOver()).isTrue();
     assertThat(root.getWinner()).isEqualTo(Player.ONE);
   }

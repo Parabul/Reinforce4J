@@ -6,7 +6,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
-import org.reinforce4j.core.StateNodeService;
+import org.reinforce4j.montecarlo.StateNodeService;
 import org.reinforce4j.evaluation.GameOverEvaluator;
 import org.reinforce4j.evaluation.ZeroValueUniformEvaluator;
 import org.reinforce4j.games.Connect4Service;
@@ -60,7 +60,7 @@ public class ExampleGenTest {
                         new StateNodeService(
                             new TicTacToeService(),
                             new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(9)),
-                            100000,
+                            1000000,
                             30))
                 .setBasePath("/not/used")
                 .setNumIterations(3)
@@ -92,7 +92,7 @@ public class ExampleGenTest {
                         new StateNodeService(
                             new Connect4Service(),
                             new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(7)),
-                            100000,
+                            1000_000,
                             30))
                 .setBasePath("/not/used")
                 .setNumIterations(2)

@@ -1,9 +1,9 @@
-package org.reinforce4j.core;
+package org.reinforce4j.montecarlo;
 
-import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import org.reinforce4j.core.Player;
 
 public class AverageValue {
 
@@ -15,22 +15,12 @@ public class AverageValue {
   public AverageValue() {}
 
   public AverageValue(float value, Player player) {
-    checkArgument(!player.equals(Player.NONE));
     this.support = 1;
-    this.totalObservedValue = value * getMultiply(player);
+    this.totalObservedValue = value * player.getMultiplier();
   }
 
   public long getSupport() {
     return support;
-  }
-
-  private double getMultiply(Player player) {
-    checkArgument(!player.equals(Player.NONE));
-    if (player.equals(Player.TWO)) {
-      return -1;
-    } else {
-      return 1;
-    }
   }
 
   public void copy(final AverageValue other) {
@@ -39,7 +29,7 @@ public class AverageValue {
   }
 
   public void set(Player player, double value) {
-    totalObservedValue = value * getMultiply(player);
+    totalObservedValue = value * player.getMultiplier();
     support = 1;
   }
 
@@ -49,12 +39,12 @@ public class AverageValue {
   }
 
   public void add(Player player, double value) {
-    totalObservedValue += value * getMultiply(player);
+    totalObservedValue += value * player.getMultiplier();
     support++;
   }
 
   public float getValue(Player player) {
-    return support > 0 ? (float) (getMultiply(player) * totalObservedValue / support) : 0.0f;
+    return support > 0 ? (float) (player.getMultiplier() * totalObservedValue / support) : 0.0f;
   }
 
   @Override

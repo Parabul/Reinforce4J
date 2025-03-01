@@ -1,13 +1,6 @@
-package org.reinforce4j.core;
+package org.reinforce4j.montecarlo;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.TextFormat;
-import org.reinforce4j.evaluation.ZeroValueUniformEvaluator;
-import org.junit.jupiter.api.Test;
-import org.tensorflow.example.Example;
 
 class StateNodeTest {
 

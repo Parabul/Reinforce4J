@@ -3,7 +3,6 @@ package org.reinforce4j.games;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.reinforce4j.core.Player;
@@ -85,5 +84,29 @@ class Connect4Test {
 
     from.move(5);
     assertThat(to).isNotEqualTo(from);
+  }
+
+  @Test
+  public void noMovesGameOver() {
+
+    Connect4 almostGameOver =
+        new Connect4(
+            new int[][] {
+              {1, -1, 1, 1, -1, 1, 0},
+              {-1, 1, 1, -1, -1, 1, 1},
+              {1, -1, -1, -1, 1, 1, -1},
+              {-1, 1, 1, -1, -1, -1, 1},
+              {1, -1, -1, 1, 1, 1, -1},
+              {-1, 1, -1, -1, -1, 1, 1}
+            },
+            Player.TWO);
+
+    assertFalse(almostGameOver.isGameOver());
+    assertNull(almostGameOver.getWinner());
+
+    almostGameOver.move(6);
+
+    assertTrue(almostGameOver.isGameOver());
+    assertEquals(Player.NONE, almostGameOver.getWinner());
   }
 }

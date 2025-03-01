@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.concurrent.*;
 
 import org.reinforce4j.core.GameState;
-import org.reinforce4j.core.MonteCarloTreeSearch;
-import org.reinforce4j.core.StateNodeService;
+import org.reinforce4j.montecarlo.MonteCarloTreeSearch;
+import org.reinforce4j.montecarlo.StateNodeService;
 import org.reinforce4j.utils.tfrecord.TFRecordWriter;
 
 /** Generates initial training dataset using self play of random move strategy. */

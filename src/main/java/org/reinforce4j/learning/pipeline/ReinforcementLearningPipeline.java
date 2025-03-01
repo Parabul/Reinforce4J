@@ -2,10 +2,9 @@ package org.reinforce4j.learning.pipeline;
 
 import com.google.common.base.Stopwatch;
 import java.nio.file.Paths;
-import org.reinforce4j.core.StateNodeService;
+import org.reinforce4j.montecarlo.StateNodeService;
 import org.reinforce4j.evaluation.GameOverEvaluator;
 import org.reinforce4j.evaluation.ZeroValueUniformEvaluator;
-import org.reinforce4j.games.TicTacToe;
 import org.reinforce4j.games.TicTacToeService;
 import org.reinforce4j.learning.execute.ModelTrainerExecutor;
 import org.reinforce4j.learning.training.ExampleGen;

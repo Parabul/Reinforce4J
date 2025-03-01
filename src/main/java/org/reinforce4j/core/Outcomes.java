@@ -6,8 +6,6 @@ import com.google.common.base.Objects;
 /** Game outcomes */
 public class Outcomes {
 
-  //  private final EnumMap<Player, Long> outcomes = new EnumMap<>(Player.class);
-
   private long firstPlayerWins;
   private long secondPlayerWins;
   private long ties;

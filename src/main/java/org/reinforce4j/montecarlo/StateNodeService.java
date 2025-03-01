@@ -1,9 +1,11 @@
-package org.reinforce4j.core;
+package org.reinforce4j.montecarlo;
 
+import java.util.Optional;
+import java.util.Stack;
+import org.reinforce4j.core.GameService;
+import org.reinforce4j.core.GameState;
 import org.reinforce4j.evaluation.Evaluator;
 import org.reinforce4j.utils.tfrecord.TFRecordWriter;
-
-import java.util.Stack;
 
 @SuppressWarnings("unchecked")
 public class StateNodeService<T extends GameState> {
@@ -34,27 +36,41 @@ public class StateNodeService<T extends GameState> {
   }
 
   public StateNode<T> newRoot() {
-    return create(gameService.initialState());
+    StateNode<T> node = create(gameService.initialState());
+    evaluator.evaluate(node);
+    return node;
   }
 
-  public boolean initChildren(StateNode<T> stateNode) {
+  public Optional<AverageValue> initChildren(StateNode<T> stateNode) {
     if (stateNode.isInitialized()) {
-      return false;
+      return Optional.empty();
     }
     stateNode.setInitialized(true);
     // TODO(Anarbek): Ensure that these are properly deleted at prune
     for (int move = 0; move < gameService.numMoves(); move++) {
-      if (!stateNode.getState().isMoveAllowed(move)) {
+      if (!stateNode.state().isMoveAllowed(move)) {
         continue;
       }
-      StateNode<T> childNode = create(stateNode.getState());
-      childNode.getState().move(move);
+      StateNode<T> childNode = create(stateNode.state());
+      childNode.state().move(move);
       stateNode.getChildStates()[move] = childNode;
     }
 
     evaluator.evaluate(stateNode.getChildStates());
 
-    return true;
+    AverageValue averageValue = new AverageValue();
+    for (int move = 0; move < gameService.numMoves(); move++) {
+      if (!stateNode.state().isMoveAllowed(move)) {
+        continue;
+      }
+      StateNode<T> childNode = stateNode.getChildStates()[move];
+      childNode
+          .getAverageValue()
+          .set(childNode.state().getCurrentPlayer(), childNode.evaluation().getValue());
+      averageValue.add(childNode.state().getCurrentPlayer(), childNode.evaluation().getValue());
+    }
+
+    return Optional.of(averageValue);
   }
 
   // Returns number of nodes written. Skips nodes that have less than `minVisits`.

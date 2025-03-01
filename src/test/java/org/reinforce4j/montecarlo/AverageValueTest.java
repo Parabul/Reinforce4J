@@ -1,7 +1,8 @@
-package org.reinforce4j.core;
+package org.reinforce4j.montecarlo;
 
 import com.google.common.truth.Truth;
 import org.junit.Test;
+import org.reinforce4j.core.Player;
 
 public class AverageValueTest {
 

@@ -6,7 +6,6 @@ import org.tensorflow.Result;
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Session;
 import org.tensorflow.Signature;
-import org.tensorflow.ndarray.NdArrays;
 import org.tensorflow.ndarray.Shape;
 import org.tensorflow.ndarray.StdArrays;
 import org.tensorflow.ndarray.buffer.DataBuffers;
@@ -31,6 +30,8 @@ public class TensorflowEvaluator<T extends GameState> implements Evaluator<T> {
   private final String valueOutputName;
   private final String policyOutputName;
   private final GameService<T> gameService;
+  private final float[] batch;
+  private final Shape shape;
 
   public TensorflowEvaluator(String modelPath, GameService<T> gameService) {
     SavedModelBundle model = SavedModelBundle.load(modelPath, SERVE_TAG);
@@ -40,20 +41,21 @@ public class TensorflowEvaluator<T extends GameState> implements Evaluator<T> {
     this.policyOutputName = signature.getOutputs().get(POLICY_OUTPUT).name;
     this.session = model.session();
     this.gameService = gameService;
+    this.batch = new float[gameService.numMoves() * gameService.numFeatures()];
+    this.shape = Shape.of(gameService.numMoves(), gameService.numFeatures());
   }
 
   @Override
   public void evaluate(GameStateAndEvaluation<T>... nodes) {
-    float[] batch = new float[nodes.length * gameService.numFeatures()];
     for (int i = 0; i < nodes.length; i++) {
-      float[] encoded = gameService.encode(nodes[i].getState());
+      if (nodes[i] == null) {
+        continue;
+      }
+      float[] encoded = gameService.encode(nodes[i].state());
       System.arraycopy(encoded, 0, batch, i * encoded.length, encoded.length);
     }
 
-    TFloat32 input =
-        TFloat32.tensorOf(
-            NdArrays.wrap(
-                Shape.of(nodes.length, gameService.numFeatures()), DataBuffers.of(batch)));
+    TFloat32 input = TFloat32.tensorOf(shape, DataBuffers.of(batch));
 
     Result result =
         session
@@ -71,10 +73,13 @@ public class TensorflowEvaluator<T extends GameState> implements Evaluator<T> {
             (TFloat32) result.get(policyOutputName).orElseThrow(IllegalStateException::new));
 
     for (int i = 0; i < nodes.length; i++) {
+      if (nodes[i] == null) {
+        continue;
+      }
       GameStateAndEvaluation<T> node = nodes[i];
       System.arraycopy(
-          policyOutput[i], 0, node.getEvaluation().getPolicy(), 0, policyOutput[i].length);
-      nodes[i].getEvaluation().setValue(valueOutput[i][0]);
+          policyOutput[i], 0, node.evaluation().getPolicy(), 0, policyOutput[i].length);
+      nodes[i].evaluation().setValue(valueOutput[i][0]);
     }
   }
 }

@@ -1,10 +1,10 @@
 package org.reinforce4j.core;
 
 public enum Player {
-  ONE,
-  TWO,
+  ONE(1.0f),
+  TWO(-1.0f),
   // To capture cases of draw (tie) game outcomes.
-  NONE;
+  NONE(0.0f);
 
   static {
     ONE.opponent = TWO;
@@ -12,5 +12,14 @@ public enum Player {
     NONE.opponent = NONE;
   }
 
+  private final float multiplier;
   public Player opponent;
+
+  Player(float multiplier) {
+    this.multiplier = multiplier;
+  }
+
+  public float getMultiplier() {
+    return multiplier;
+  }
 }

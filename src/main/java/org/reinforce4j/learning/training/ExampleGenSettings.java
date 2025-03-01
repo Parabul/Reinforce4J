@@ -2,7 +2,7 @@ package org.reinforce4j.learning.training;
 
 import com.google.auto.value.AutoValue;
 import org.reinforce4j.core.GameState;
-import org.reinforce4j.core.StateNodeService;
+import org.reinforce4j.montecarlo.StateNodeService;
 
 import java.util.function.Supplier;
 

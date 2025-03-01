@@ -58,7 +58,7 @@ public class Connect4 implements GameState<Connect4> {
 
     isGameOver = checkGameOver(lastRow, col);
     if (isGameOver) {
-      winner = lastRow != -1 ? currentPlayer : Player.NONE;
+      winner = isTieGameOver(col)  ? Player.NONE: currentPlayer;
     }
 
     currentPlayer = currentPlayer.opponent;
@@ -102,12 +102,30 @@ public class Connect4 implements GameState<Connect4> {
 
   private boolean checkGameOver(int row, int col) {
     int player = board[row][col];
-    return countConsecutive(row, col, 1, 0, player) + countConsecutive(row, col, -1, 0, player) >= 3
-            || countConsecutive(row, col, 0, 1, player) + countConsecutive(row, col, 0, -1, player) >= 3
+    boolean winGameOver =
+        countConsecutive(row, col, 1, 0, player) + countConsecutive(row, col, -1, 0, player) >= 3
+            || countConsecutive(row, col, 0, 1, player) + countConsecutive(row, col, 0, -1, player)
+                >= 3
             || countConsecutive(row, col, 1, 1, player) + countConsecutive(row, col, -1, -1, player)
-            >= 3
+                >= 3
             || countConsecutive(row, col, 1, -1, player) + countConsecutive(row, col, -1, 1, player)
-            >= 3;
+                >= 3;
+    if (winGameOver) {
+      return true;
+    }
+
+    // Tie game over;
+    return isTieGameOver(col);
+  }
+
+  boolean isTieGameOver(int lastMove){
+    for (int i = 0; i < Connect4.COLS; i++) {
+      if (board[0][lastMove] == 0) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   private int countConsecutive(int row, int col, int dRow, int dCol, int player) {

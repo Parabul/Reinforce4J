@@ -1,4 +1,4 @@
-package org.reinforce4j.core;
+package org.reinforce4j.montecarlo;
 
 import com.google.common.base.Preconditions;
 
@@ -6,7 +6,7 @@ class BackPropagationStack {
 
   private final StateNode[] stateNodes;
   private final AverageValue[] averageValues;
-  private int pointer;
+  public int pointer;
 
   BackPropagationStack(int capacity) {
     this.stateNodes = new StateNode[capacity];

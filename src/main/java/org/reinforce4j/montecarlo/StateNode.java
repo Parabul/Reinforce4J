@@ -1,8 +1,10 @@
-package org.reinforce4j.core;
+package org.reinforce4j.montecarlo;
 
 import com.google.common.base.MoreObjects;
 import java.util.Arrays;
 import java.util.stream.Collectors;
+
+import org.reinforce4j.core.*;
 import org.reinforce4j.evaluation.GameStateAndEvaluation;
 import org.reinforce4j.evaluation.StateEvaluation;
 import org.reinforce4j.utils.TensorFlowUtils;
@@ -41,7 +43,7 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
   }
 
   @Override
-  public StateEvaluation getEvaluation() {
+  public StateEvaluation evaluation() {
     return evaluation;
   }
 
@@ -50,7 +52,7 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
   }
 
   @Override
-  public T getState() {
+  public T state() {
     return state;
   }
 
@@ -117,7 +119,7 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
   }
 
   public float[] getPolicy() {
-    return getEvaluation().getPolicy();
+    return evaluation().getPolicy();
   }
 
   public long getVisits() {
@@ -169,7 +171,7 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
                 .map(ch -> ch.outcomes)
                 .collect(Collectors.toList()))
         .add("state", state)
-        .add("policy", getEvaluation())
+        .add("policy", evaluation())
         .add("averageValue", averageValue)
         .add("outcomes", outcomes)
         .add("id", id)
