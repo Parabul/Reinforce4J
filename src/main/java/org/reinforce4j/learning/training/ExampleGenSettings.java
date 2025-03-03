@@ -13,7 +13,8 @@ public abstract class ExampleGenSettings<T extends GameState> {
     return new AutoValue_ExampleGenSettings.Builder();
   }
 
-  public static <T extends GameState> Builder withDefaults(Supplier<StateNodeService<T>> nodeServiceSupplier) {
+  public static <T extends GameState> Builder withDefaults(
+      Supplier<StateNodeService<T>> nodeServiceSupplier) {
     return new AutoValue_ExampleGenSettings.Builder()
         .setNumExpansions(50_000)
         .setNumThreads(4)
@@ -47,7 +48,8 @@ public abstract class ExampleGenSettings<T extends GameState> {
 
     public abstract ExampleGenSettings.Builder<T> setMinNumOutcomes(int value);
 
-    public abstract ExampleGenSettings.Builder<T> setServiceSupplier(Supplier<StateNodeService<T>> value);
+    public abstract ExampleGenSettings.Builder<T> setServiceSupplier(
+        Supplier<StateNodeService<T>> value);
 
     public abstract ExampleGenSettings<T> build();
   }

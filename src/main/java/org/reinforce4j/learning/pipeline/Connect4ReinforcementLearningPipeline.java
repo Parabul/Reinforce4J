@@ -2,13 +2,13 @@ package org.reinforce4j.learning.pipeline;
 
 import com.google.common.base.Stopwatch;
 import java.nio.file.Paths;
-import org.reinforce4j.montecarlo.StateNodeService;
 import org.reinforce4j.evaluation.GameOverEvaluator;
 import org.reinforce4j.evaluation.ZeroValueUniformEvaluator;
 import org.reinforce4j.games.Connect4Service;
 import org.reinforce4j.learning.execute.ModelTrainerExecutor;
 import org.reinforce4j.learning.training.ExampleGen;
 import org.reinforce4j.learning.training.ExampleGenSettings;
+import org.reinforce4j.montecarlo.StateNodeService;
 
 public class Connect4ReinforcementLearningPipeline {
 

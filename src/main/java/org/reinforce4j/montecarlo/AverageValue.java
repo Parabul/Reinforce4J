@@ -1,6 +1,5 @@
 package org.reinforce4j.montecarlo;
 
-
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import org.reinforce4j.core.Player;
@@ -66,5 +65,10 @@ public class AverageValue {
         .add("totalObservedValue", totalObservedValue)
         .add("support", support)
         .toString();
+  }
+
+  public void reset() {
+    totalObservedValue = 0;
+    support = 0;
   }
 }

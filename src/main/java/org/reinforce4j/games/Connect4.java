@@ -1,5 +1,6 @@
 package org.reinforce4j.games;
 
+import com.google.common.base.Preconditions;
 import java.util.Arrays;
 import org.reinforce4j.core.GameState;
 import org.reinforce4j.core.Player;
@@ -46,6 +47,24 @@ public class Connect4 implements GameState<Connect4> {
   }
 
   @Override
+  public void encode(float[] buffer) {
+    Preconditions.checkArgument(buffer.length == ROWS * COLS);
+    int index = 0;
+    for (int[] row : board) {
+      for (int cell : row) {
+        buffer[index++] = cell;
+      }
+    }
+  }
+
+  @Override
+  public float[] encode() {
+    float[] buffer = new float[ROWS * COLS];
+    encode(buffer);
+    return buffer;
+  }
+
+  @Override
   public void move(int col) {
     int lastRow = -1;
     for (int row = ROWS - 1; row >= 0; row--) {
@@ -58,7 +77,7 @@ public class Connect4 implements GameState<Connect4> {
 
     isGameOver = checkGameOver(lastRow, col);
     if (isGameOver) {
-      winner = isTieGameOver(col)  ? Player.NONE: currentPlayer;
+      winner = isTieGameOver(col) ? Player.NONE : currentPlayer;
     }
 
     currentPlayer = currentPlayer.opponent;
@@ -118,7 +137,7 @@ public class Connect4 implements GameState<Connect4> {
     return isTieGameOver(col);
   }
 
-  boolean isTieGameOver(int lastMove){
+  boolean isTieGameOver(int lastMove) {
     for (int i = 0; i < Connect4.COLS; i++) {
       if (board[0][lastMove] == 0) {
         return false;

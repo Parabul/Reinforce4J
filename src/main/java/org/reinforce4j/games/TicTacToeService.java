@@ -22,18 +22,6 @@ public class TicTacToeService implements GameService<TicTacToe> {
   }
 
   @Override
-  public float[] encode(TicTacToe state) {
-    float[] features = new float[numFeatures()];
-    for (int move = 1; move <= numMoves(); move++) {
-      int i = (move - 1) / 3;
-      int j = (move - 1) % 3;
-
-      features[move - 1] = state.getCells()[i][j];
-    }
-    return features;
-  }
-
-  @Override
   public int numFeatures() {
     return 9;
   }

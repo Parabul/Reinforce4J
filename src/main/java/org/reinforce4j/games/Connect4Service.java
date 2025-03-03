@@ -26,16 +26,4 @@ public class Connect4Service implements GameService<Connect4> {
   public Connect4 initialState() {
     return INITIAL_STATE;
   }
-
-  @Override
-  public float[] encode(Connect4 state) {
-    float[] features = new float[numFeatures()];
-    int index = 0;
-    for (int[] row : state.getBoard()) {
-      for (int cell : row) {
-        features[index++] = cell;
-      }
-    }
-    return features;
-  }
 }

@@ -34,6 +34,21 @@ public class Outcomes {
     }
   }
 
+  public float winRateFor(Player player) {
+    long total = getTotalOutcomes();
+    if (total == 0L) {
+      return 0.0f;
+    }
+    switch (player) {
+      case ONE:
+        return (1.0f * firstPlayerWins + 0.5f * ties) / total;
+      case TWO:
+        return (1.0f * secondPlayerWins + 0.5f * ties) / total;
+      default:
+        return 1.0f * ties / total;
+    }
+  }
+
   public void addWinner(Player winner) {
     switch (winner) {
       case ONE:
@@ -72,5 +87,11 @@ public class Outcomes {
         .add("secondPlayerWins", secondPlayerWins)
         .add("ties", ties)
         .toString();
+  }
+
+  public void reset() {
+    firstPlayerWins = 0;
+    secondPlayerWins = 0;
+    ties = 0;
   }
 }

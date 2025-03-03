@@ -1,42 +1,40 @@
 package org.reinforce4j.montecarlo;
 
-import java.util.Optional;
-import java.util.Stack;
+import java.util.*;
 import org.reinforce4j.core.GameService;
 import org.reinforce4j.core.GameState;
 import org.reinforce4j.evaluation.Evaluator;
+import org.reinforce4j.utils.TensorFlowUtils;
 import org.reinforce4j.utils.tfrecord.TFRecordWriter;
+import org.tensorflow.example.Example;
 
 @SuppressWarnings("unchecked")
 public class StateNodeService<T extends GameState> {
 
-  private final StateNode<T>[] pool;
+  private final Deque<StateNode<T>> pool;
   private final int capacity;
 
   private final GameService<T> gameService;
   private final Evaluator<T> evaluator;
   private final int minVisits;
-  private int pointer;
 
   public StateNodeService(
       GameService<T> gameService, Evaluator<T> evaluator, int capacity, int minVisits) {
     this.capacity = capacity;
     this.minVisits = minVisits;
-    this.pool = new StateNode[capacity];
-    this.pointer = 0;
+    this.pool = new ArrayDeque<>(capacity);
     this.gameService = gameService;
     this.evaluator = evaluator;
   }
 
   public void init() {
     for (int i = 0; i < capacity; i++) {
-      pool[i] = new StateNode<T>(i, gameService.newInitialState(), gameService.numMoves());
+      pool.add(new StateNode<>(gameService.newInitialState(), gameService.numMoves()));
     }
-    pointer = -1;
   }
 
   public StateNode<T> newRoot() {
-    StateNode<T> node = create(gameService.initialState());
+    StateNode<T> node = acquire(gameService.initialState());
     evaluator.evaluate(node);
     return node;
   }
@@ -51,7 +49,7 @@ public class StateNodeService<T extends GameState> {
       if (!stateNode.state().isMoveAllowed(move)) {
         continue;
       }
-      StateNode<T> childNode = create(stateNode.state());
+      StateNode<T> childNode = acquire(stateNode.state());
       childNode.state().move(move);
       stateNode.getChildStates()[move] = childNode;
     }
@@ -82,7 +80,7 @@ public class StateNodeService<T extends GameState> {
     while (!stack.isEmpty()) {
       StateNode current = stack.pop();
       if (!current.isLeaf()) {
-        writer.write(current.toExample(gameService));
+        writer.write(toExample(current));
         written++;
         for (StateNode child : current.getChildStates()) {
           if (child != null && child.getVisits() > minVisits) {
@@ -95,16 +93,75 @@ public class StateNodeService<T extends GameState> {
     return written;
   }
 
-  public StateNode<T> create(final T state) {
-    return pool[++pointer].initializeWith(state).setId(pointer);
+  public Example toExample(StateNode<T> stateNode) {
+    float[] encodedInput = new float[gameService.numFeatures()];
+    stateNode.state().encode(encodedInput);
+
+    float[] encodedOutput = new float[gameService.numMoves() + 1];
+    stateNode.encode(encodedOutput);
+    return TensorFlowUtils.toExample(encodedInput, encodedOutput);
   }
 
-  public void delete(final StateNode buffer) {
-    pool[buffer.getId()].copy(pool[--pointer]).setId(buffer.getId());
+  /** Traverses the tree and prunes nodes with less than `minVisits` visits. */
+  public void traverseAndPrune(StateNode<T> root, int minVisits) {
+    Stack<StateNode> stack = new Stack<>();
+    stack.push(root);
+
+    while (!stack.isEmpty()) {
+      StateNode current = stack.pop();
+      if (current.isLeaf()) {
+        continue;
+      }
+      if (current.getVisits() > minVisits) {
+        for (StateNode child : current.getChildStates()) {
+          if (child != null) {
+            stack.push(child);
+          }
+        }
+      } else {
+        pruneChildNodes(current);
+      }
+    }
+  }
+
+  private void pruneChildNodes(StateNode<T> node) {
+    node.setInitialized(false);
+
+    Stack<StateNode> stack = new Stack<>();
+    for (int move = 0; move < gameService.numMoves(); move++) {
+      if (node.getChildStates()[move] != null) {
+        stack.push(node.getChildStates()[move]);
+        node.getChildStates()[move] = null;
+      }
+    }
+
+    while (!stack.isEmpty()) {
+      StateNode current = stack.pop();
+      if (!current.isLeaf()) {
+        for (StateNode child : current.getChildStates()) {
+          if (child != null) {
+            stack.push(child);
+          }
+        }
+      }
+      release(current);
+    }
+  }
+
+  public StateNode<T> acquire(final T state) {
+    return pool.pop().initializeWith(state);
+  }
+
+  public void release(final StateNode node) {
+    pool.push(node);
   }
 
   public double getUsage() {
-    return 1.0 * pointer / capacity;
+    return 1.0 - ((double) pool.size() / capacity);
+  }
+
+  public int getSize() {
+    return capacity - pool.size();
   }
 
   public int getCapacity() {

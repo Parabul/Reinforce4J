@@ -4,7 +4,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
-
 import org.reinforce4j.core.GameState;
 import org.reinforce4j.montecarlo.MonteCarloTreeSearch;
 import org.reinforce4j.montecarlo.StateNodeService;

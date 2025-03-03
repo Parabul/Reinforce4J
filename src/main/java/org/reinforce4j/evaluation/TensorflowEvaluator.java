@@ -32,6 +32,7 @@ public class TensorflowEvaluator<T extends GameState> implements Evaluator<T> {
   private final GameService<T> gameService;
   private final float[] batch;
   private final Shape shape;
+  private final float[] buffer;
 
   public TensorflowEvaluator(String modelPath, GameService<T> gameService) {
     SavedModelBundle model = SavedModelBundle.load(modelPath, SERVE_TAG);
@@ -43,6 +44,7 @@ public class TensorflowEvaluator<T extends GameState> implements Evaluator<T> {
     this.gameService = gameService;
     this.batch = new float[gameService.numMoves() * gameService.numFeatures()];
     this.shape = Shape.of(gameService.numMoves(), gameService.numFeatures());
+    this.buffer = new float[gameService.numFeatures()];
   }
 
   @Override
@@ -51,8 +53,8 @@ public class TensorflowEvaluator<T extends GameState> implements Evaluator<T> {
       if (nodes[i] == null) {
         continue;
       }
-      float[] encoded = gameService.encode(nodes[i].state());
-      System.arraycopy(encoded, 0, batch, i * encoded.length, encoded.length);
+      nodes[i].state().encode(buffer);
+      System.arraycopy(buffer, 0, batch, i * buffer.length, buffer.length);
     }
 
     TFloat32 input = TFloat32.tensorOf(shape, DataBuffers.of(batch));

@@ -6,10 +6,10 @@ import org.junit.Test;
 
 public class PlayerTest {
 
-    @Test
-    public void hasOpponent() {
-        assertThat(Player.NONE.opponent).isEqualTo(Player.NONE);
-        assertThat(Player.ONE.opponent).isEqualTo(Player.TWO);
-        assertThat(Player.TWO.opponent).isEqualTo(Player.ONE);
-    }
+  @Test
+  public void hasOpponent() {
+    assertThat(Player.NONE.opponent).isEqualTo(Player.NONE);
+    assertThat(Player.ONE.opponent).isEqualTo(Player.TWO);
+    assertThat(Player.TWO.opponent).isEqualTo(Player.ONE);
+  }
 }

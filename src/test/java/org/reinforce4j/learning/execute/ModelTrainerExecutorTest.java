@@ -17,7 +17,7 @@ class ModelTrainerExecutorTest {
     ModelTrainerExecutor executor =
         new ModelTrainerExecutor(
             tempDir.toString(),
-                getClass().getClassLoader().getResource("test_args.py").getPath(),
+            getClass().getClassLoader().getResource("test_args.py").getPath(),
             "/home/anarbek/tmp",
             "/home/anarbek/tmp/model");
 
@@ -30,7 +30,7 @@ class ModelTrainerExecutorTest {
     ModelTrainerExecutor executor =
         new ModelTrainerExecutor(
             tempDir.toString(),
-                getClass().getClassLoader().getResource("test_args.py").getPath(),
+            getClass().getClassLoader().getResource("test_args.py").getPath(),
             "/home/anarbek/tmp",
             "/home/anarbek/tmp/model");
     assertThat(executor.execute()).isEqualTo(0);

@@ -59,30 +59,13 @@ public class MonteCarloTreeSearch<T extends GameState> {
     } while (backPropagationStack.hasNext());
   }
 
-
   // Returns number of nodes written. Skips nodes that have less than `minVisits`.
   public long writeTo(TFRecordWriter writer) {
-    return stateNodeService.writeTo(getRoot(), writer);
+    return stateNodeService.writeTo(root, writer);
   }
 
   // Returns number of nodes written. Skips nodes that have less than `minVisits`.
   public void prune(int minVisits) {
-    Stack<StateNode> stack = new Stack<>();
-    stack.push(root);
-
-    while (!stack.isEmpty()) {
-      StateNode current = stack.pop();
-      if (!current.isLeaf()) {
-        if (current.getVisits() > minVisits) {
-          for (StateNode child : current.getChildStates()) {
-            if (child != null && child.getVisits() > minVisits) {
-              stack.push(child);
-            }
-          }
-        } else {
-          current.prune();
-        }
-      }
-    }
+    stateNodeService.traverseAndPrune(root, minVisits);
   }
 }

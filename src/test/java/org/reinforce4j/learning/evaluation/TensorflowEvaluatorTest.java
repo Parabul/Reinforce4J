@@ -36,9 +36,9 @@ public class TensorflowEvaluatorTest {
     game3.move(4);
     game3.move(1);
 
-    StateNode<TicTacToe> node1 = stateNodeService.create(game1);
-    StateNode<TicTacToe> node2 = stateNodeService.create(game2);
-    StateNode<TicTacToe> node3 = stateNodeService.create(game3);
+    StateNode<TicTacToe> node1 = stateNodeService.acquire(game1);
+    StateNode<TicTacToe> node2 = stateNodeService.acquire(game2);
+    StateNode<TicTacToe> node3 = stateNodeService.acquire(game3);
 
     tensorflowBatchEvaluator.evaluate(node1, node2, null, node3);
 

@@ -11,8 +11,6 @@ public interface GameService<T extends GameState> {
   // Number of alternative moves in the game [1, N];
   int numMoves();
 
-  float[] encode(T state);
-
   // Number of features is the length of the encoded array.
   int numFeatures();
 }

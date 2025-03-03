@@ -6,11 +6,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
-import org.reinforce4j.montecarlo.StateNodeService;
 import org.reinforce4j.evaluation.GameOverEvaluator;
 import org.reinforce4j.evaluation.ZeroValueUniformEvaluator;
 import org.reinforce4j.games.Connect4Service;
 import org.reinforce4j.games.TicTacToeService;
+import org.reinforce4j.montecarlo.StateNodeService;
 import org.reinforce4j.utils.tfrecord.TFRecordReader;
 import org.tensorflow.example.Example;
 

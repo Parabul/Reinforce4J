@@ -2,16 +2,9 @@ package org.reinforce4j.montecarlo;
 
 import com.google.common.base.MoreObjects;
 import java.util.Arrays;
-import java.util.stream.Collectors;
-
 import org.reinforce4j.core.*;
 import org.reinforce4j.evaluation.GameStateAndEvaluation;
 import org.reinforce4j.evaluation.StateEvaluation;
-import org.reinforce4j.utils.TensorFlowUtils;
-import org.tensorflow.example.Example;
-import org.tensorflow.example.Feature;
-import org.tensorflow.example.Features;
-import org.tensorflow.example.FloatList;
 
 @SuppressWarnings("unchecked")
 // Wrapper around game state that represents a single node in the Monte Carlo Search Tree.
@@ -29,12 +22,10 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
   // Unique identification for object pooling.
   // Outcomes observed:
   private final Outcomes outcomes;
-  private int id;
   // True when visited and not pruned.
   private boolean initialized = false;
 
-  public StateNode(int id, T initialState, int numMoves) {
-    this.id = id;
+  public StateNode(T initialState, int numMoves) {
     this.state = initialState;
     this.evaluation = new StateEvaluation(numMoves);
     this.childStates = new StateNode[numMoves];
@@ -58,7 +49,11 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
 
   public StateNode<T> initializeWith(T state) {
     this.state.copy(state);
-    // Resetting of fields should be done at pruning time.
+    evaluation.reset();
+    averageValue.reset();
+    outcomes.reset();
+    this.initialized = false;
+    Arrays.fill(childStates, null);
     return this;
   }
 
@@ -79,39 +74,17 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
     return this;
   }
 
+  public void update(Player winner, AverageValue averageValue) {
+    this.outcomes.addWinner(winner);
+    this.averageValue.add(averageValue);
+  }
+
   public boolean isInitialized() {
     return initialized;
   }
 
   public void setInitialized(boolean initialized) {
     this.initialized = initialized;
-  }
-
-  public int getId() {
-    return id;
-  }
-
-  public StateNode<T> setId(int id) {
-    this.id = id;
-    return this;
-  }
-
-  public void update(Player winner, AverageValue averageValue) {
-    this.outcomes.addWinner(winner);
-    this.averageValue.add(averageValue);
-  }
-
-  public boolean prune() {
-    if (!initialized) {
-      return false;
-    }
-    initialized = false;
-
-    for (int i = 0; i < childStates.length; i++) {
-      childStates[i] = null;
-    }
-
-    return true;
   }
 
   public boolean isLeaf() {
@@ -126,37 +99,6 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
     return outcomes.getTotalOutcomes();
   }
 
-  public Example toExample(GameService<T> gameService) {
-    if (isLeaf()) {
-      throw new IllegalStateException("Leaf nodes have no moves");
-    }
-    FloatList.Builder outcomeFeature =
-        FloatList.newBuilder().addValue(outcomes.valueFor(state.getCurrentPlayer()));
-
-    float[] values = new float[childStates.length];
-    float sum = 0;
-    for (int move = 0; move < childStates.length; move++) {
-      if (childStates[move] == null) {
-        continue;
-      }
-
-      values[move] = childStates[move].outcomes.valueFor(state.getCurrentPlayer());
-      sum += values[move];
-    }
-
-    // TODO(anarbek): Revisit. Check how to handle states all zero values moves.
-    for (float value : values) {
-      outcomeFeature.addValue(sum > 0 ? value / sum : 0);
-    }
-
-    return Example.newBuilder()
-        .setFeatures(
-            Features.newBuilder()
-                .putFeature("input", TensorFlowUtils.floatList(gameService.encode(state)))
-                .putFeature("output", Feature.newBuilder().setFloatList(outcomeFeature).build()))
-        .build();
-  }
-
   public AverageValue getAverageValue() {
     return averageValue;
   }
@@ -164,18 +106,46 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add(
-            "childStates",
-            Arrays.stream(childStates)
-                .filter(ch -> ch != null)
-                .map(ch -> ch.outcomes)
-                .collect(Collectors.toList()))
         .add("state", state)
         .add("policy", evaluation())
         .add("averageValue", averageValue)
         .add("outcomes", outcomes)
-        .add("id", id)
         .add("initialized", initialized)
+        //            .add(
+        //                    "childStates",
+        //                    Arrays.stream(childStates)
+        //                            .filter(ch -> ch != null)
+        //                            .map(ch -> ch.outcomes)
+        //                            .collect(Collectors.toList()))
         .toString();
+  }
+
+  /** Returns encoded representation of the outcomes observed in the given node. */
+  public float[] encode() {
+    float[] outputs = new float[childStates.length + 1];
+    encode(outputs);
+    return outputs;
+  }
+
+  public void encode(float[] outputs) {
+    if (isLeaf()) {
+      throw new IllegalStateException("Leaf node can not be encoded");
+    }
+
+    outputs[0] = outcomes.valueFor(state.getCurrentPlayer());
+    float sum = 0;
+    for (int move = 0; move < childStates.length; move++) {
+      if (childStates[move] == null) {
+        continue;
+      }
+
+      outputs[move + 1] = childStates[move].outcomes.winRateFor(state.getCurrentPlayer());
+      sum += outputs[move + 1];
+    }
+
+    // TODO(anarbek): Revisit. Check how to handle states all zero values moves.
+    for (int move = 0; move < childStates.length; move++) {
+      outputs[move + 1] = outputs[move + 1] / sum;
+    }
   }
 }
