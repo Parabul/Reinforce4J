@@ -1,6 +1,5 @@
 package org.reinforce4j.games;
 
-import com.google.common.base.Preconditions;
 import java.util.Arrays;
 import org.reinforce4j.core.GameState;
 import org.reinforce4j.core.Player;
@@ -47,20 +46,14 @@ public class Connect4 implements GameState<Connect4> {
   }
 
   @Override
-  public void encode(float[] buffer) {
-    Preconditions.checkArgument(buffer.length == ROWS * COLS);
+  public float[] encode() {
+    float[] buffer = new float[ROWS * COLS];
     int index = 0;
     for (int[] row : board) {
       for (int cell : row) {
         buffer[index++] = cell;
       }
     }
-  }
-
-  @Override
-  public float[] encode() {
-    float[] buffer = new float[ROWS * COLS];
-    encode(buffer);
     return buffer;
   }
 

@@ -13,7 +13,7 @@ class ZeroValueUniformEvaluatorTest {
 
   @Test
   void shouldEvaluateRoot() {
-    TicTacToeService service = new TicTacToeService();
+    TicTacToeService service = TicTacToeService.INSTANCE;
     TicTacToe root = service.newInitialState();
     StateEvaluation evaluation = new StateEvaluation(service.numMoves());
 
@@ -31,7 +31,7 @@ class ZeroValueUniformEvaluatorTest {
 
   @Test
   void shouldEvaluateNonRoot() {
-    TicTacToeService service = new TicTacToeService();
+    TicTacToeService service = TicTacToeService.INSTANCE;
     TicTacToe root = service.newInitialState();
     root.move(4);
     StateEvaluation evaluation = new StateEvaluation(service.numMoves());

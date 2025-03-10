@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.concurrent.*;
 import org.reinforce4j.core.GameState;
 import org.reinforce4j.montecarlo.MonteCarloTreeSearch;
-import org.reinforce4j.montecarlo.StateNodeService;
 import org.reinforce4j.utils.tfrecord.TFRecordWriter;
 
 /** Generates initial training dataset using self play of random move strategy. */
@@ -58,14 +57,20 @@ public class ExampleGen<T extends GameState> implements Callable<Long> {
 
   public Long call() {
     long samples = 0;
-    for (int iter = 0; iter < settings.numIterations(); iter++) {
-      StateNodeService<T> nodeService = settings.serviceSupplier().get();
-      nodeService.init();
-      MonteCarloTreeSearch<T> monteCarloTreeSearch = new MonteCarloTreeSearch<>(nodeService);
+    MonteCarloTreeSearch<T> monteCarloTreeSearch =
+        new MonteCarloTreeSearch<>(settings.monteCarloTreeSearchSettings());
+    monteCarloTreeSearch.init();
 
-      System.out.println(iter);
+    for (int iter = 0; iter < settings.numIterations(); iter++) {
+      System.out.println("Example gen iter: " + iter);
 
       for (int i = 0; i < settings.numExpansions(); i++) {
+        if (monteCarloTreeSearch.getUsage() > 0.99) {
+          double before = monteCarloTreeSearch.getUsage();
+          monteCarloTreeSearch.prune();
+          double after = monteCarloTreeSearch.getUsage();
+          System.out.println("Prune before : " + before + " after : " + after);
+        }
         monteCarloTreeSearch.expand();
       }
 

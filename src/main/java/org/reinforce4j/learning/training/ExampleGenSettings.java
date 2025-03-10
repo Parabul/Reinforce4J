@@ -2,9 +2,7 @@ package org.reinforce4j.learning.training;
 
 import com.google.auto.value.AutoValue;
 import org.reinforce4j.core.GameState;
-import org.reinforce4j.montecarlo.StateNodeService;
-
-import java.util.function.Supplier;
+import org.reinforce4j.montecarlo.MonteCarloTreeSearchSettings;
 
 @AutoValue
 public abstract class ExampleGenSettings<T extends GameState> {
@@ -14,16 +12,15 @@ public abstract class ExampleGenSettings<T extends GameState> {
   }
 
   public static <T extends GameState> Builder withDefaults(
-      Supplier<StateNodeService<T>> nodeServiceSupplier) {
+      MonteCarloTreeSearchSettings monteCarloTreeSearchSettings) {
     return new AutoValue_ExampleGenSettings.Builder()
-        .setNumExpansions(50_000)
-        .setNumThreads(4)
-        .setNumIterations(300)
-        .setMinNumOutcomes(30)
-        .setServiceSupplier(nodeServiceSupplier);
+        .setNumExpansions(500_000)
+        .setNumThreads(8)
+        .setNumIterations(125)
+        .setMonteCarloTreeSearchSettings(monteCarloTreeSearchSettings);
   }
 
-  abstract Supplier<StateNodeService<T>> serviceSupplier();
+  abstract MonteCarloTreeSearchSettings monteCarloTreeSearchSettings();
 
   abstract String basePath();
 
@@ -32,8 +29,6 @@ public abstract class ExampleGenSettings<T extends GameState> {
   abstract int numIterations();
 
   abstract int numExpansions();
-
-  abstract int minNumOutcomes();
 
   @AutoValue.Builder
   public abstract static class Builder<T extends GameState> {
@@ -46,10 +41,8 @@ public abstract class ExampleGenSettings<T extends GameState> {
 
     public abstract ExampleGenSettings.Builder<T> setNumExpansions(int value);
 
-    public abstract ExampleGenSettings.Builder<T> setMinNumOutcomes(int value);
-
-    public abstract ExampleGenSettings.Builder<T> setServiceSupplier(
-        Supplier<StateNodeService<T>> value);
+    public abstract ExampleGenSettings.Builder<T> setMonteCarloTreeSearchSettings(
+        MonteCarloTreeSearchSettings monteCarloTreeSearchSettings);
 
     public abstract ExampleGenSettings<T> build();
   }

@@ -22,17 +22,93 @@ public class MonteCarloTreeSearchTest {
   private static final double TOLERANCE = 0.00001;
 
   @Test
+  public void acquireAndRelease() {
+    MonteCarloTreeSearchSettings<TicTacToe> settings =
+        MonteCarloTreeSearchSettings.withDefaults()
+            .setNodesPoolCapacity(100)
+            .setPruneMinVisits(1)
+            .setGameService(() -> TicTacToeService.INSTANCE)
+            .setEvaluator(() -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(9)))
+            .build();
+
+    MonteCarloTreeSearch<TicTacToe> monteCarloTreeSearch = new MonteCarloTreeSearch<>(settings);
+    monteCarloTreeSearch.init();
+
+    // Root initialized:
+    assertThat(monteCarloTreeSearch.getUsage()).isWithin(TOLERANCE).of(0.01);
+    StateNode<TicTacToe> node1 =
+        monteCarloTreeSearch.acquire(TicTacToeService.INSTANCE.initialState());
+    node1.state().move(1);
+    assertThat(monteCarloTreeSearch.getUsage()).isWithin(TOLERANCE).of(0.02);
+    assertThat(node1.state().isMoveAllowed(1)).isEqualTo(false);
+
+    StateNode<TicTacToe> node2 =
+        monteCarloTreeSearch.acquire(TicTacToeService.INSTANCE.initialState());
+    node2.state().move(5);
+    assertThat(monteCarloTreeSearch.getUsage()).isWithin(TOLERANCE).of(0.03);
+    assertThat(node2.state().isMoveAllowed(5)).isEqualTo(false);
+
+    monteCarloTreeSearch.release(node1);
+    assertThat(node2.state().isMoveAllowed(5)).isEqualTo(false);
+
+    assertThat(monteCarloTreeSearch.getUsage()).isWithin(TOLERANCE).of(0.02);
+  }
+
+  @Test
+  public void traverseAndPrune() {
+    MonteCarloTreeSearchSettings<TicTacToe> settings =
+        MonteCarloTreeSearchSettings.withDefaults()
+            .setNodesPoolCapacity(100)
+            .setPruneMinVisits(10)
+            .setGameService(() -> TicTacToeService.INSTANCE)
+            .setEvaluator(() -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(9)))
+            .build();
+
+    MonteCarloTreeSearch<TicTacToe> monteCarloTreeSearch = new MonteCarloTreeSearch(settings);
+
+    assertThat(monteCarloTreeSearch.getUsage()).isEqualTo(1.0);
+
+    monteCarloTreeSearch.init();
+    assertThat(monteCarloTreeSearch.getUsage()).isWithin(TOLERANCE).of(0.01);
+
+    StateNode root = monteCarloTreeSearch.getRoot();
+
+    assertThat(root.isLeaf()).isTrue();
+    monteCarloTreeSearch.initChildren(root);
+    assertThat(root.isLeaf()).isFalse();
+    for (int i = 0; i < 9; i++) {
+      assertThat(root.getChildStates()[i]).isNotNull();
+      assertThat(root.getChildStates()[i].isLeaf()).isTrue();
+    }
+
+    StateNode<TicTacToe> childNode = root.getChildStates()[4];
+    monteCarloTreeSearch.initChildren(childNode);
+    for (int i = 0; i < 9; i++) {
+      if (i == 4) {
+        assertThat(childNode.getChildStates()[i]).isNull();
+      } else {
+        assertThat(childNode.getChildStates()[i]).isNotNull();
+        assertThat(childNode.getChildStates()[i].isLeaf()).isTrue();
+      }
+    }
+
+    assertThat(monteCarloTreeSearch.getUsage()).isWithin(TOLERANCE).of(0.18);
+    monteCarloTreeSearch.prune();
+    assertThat(monteCarloTreeSearch.getUsage()).isWithin(TOLERANCE).of(0.01);
+    assertThat(root.isLeaf()).isTrue();
+  }
+
+  @Test
   public void expandOnceAndTraverse() {
+    MonteCarloTreeSearchSettings<TicTacToe> settings =
+        MonteCarloTreeSearchSettings.withDefaults()
+            .setNodesPoolCapacity(10_000)
+            .setGameService(() -> TicTacToeService.INSTANCE)
+            .setEvaluator(() -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(9)))
+            .build();
 
-    StateNodeService<TicTacToe> nodeService =
-        new StateNodeService(
-            new TicTacToeService(),
-            new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(9)),
-            10000,
-            30);
-    nodeService.init();
-
-    MonteCarloTreeSearch monteCarloTreeSearch = new MonteCarloTreeSearch(nodeService);
+    MonteCarloTreeSearch monteCarloTreeSearch = new MonteCarloTreeSearch(settings);
+    monteCarloTreeSearch.init();
 
     monteCarloTreeSearch.expand();
 
@@ -56,16 +132,15 @@ public class MonteCarloTreeSearchTest {
   @Test
   public void expandsUsingUniformTicTacToe() {
 
-    StateNodeService<TicTacToe> nodeService =
-        new StateNodeService(
-            new TicTacToeService(),
-            new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(9)),
-            400000,
-            30);
+    MonteCarloTreeSearchSettings<TicTacToe> settings =
+        MonteCarloTreeSearchSettings.withDefaults()
+            .setNodesPoolCapacity(200_000)
+            .setGameService(() -> TicTacToeService.INSTANCE)
+            .setEvaluator(() -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(9)))
+            .build();
 
-    nodeService.init();
-
-    MonteCarloTreeSearch monteCarloTreeSearch = new MonteCarloTreeSearch(nodeService);
+    MonteCarloTreeSearch monteCarloTreeSearch = new MonteCarloTreeSearch(settings);
+    monteCarloTreeSearch.init();
 
     int n = 1000_000;
 
@@ -81,7 +156,11 @@ public class MonteCarloTreeSearchTest {
     TFRecordWriter candidateWriter =
         new TFRecordWriter(new DataOutputStream(outputStreamCandidate));
 
+    assertThat(monteCarloTreeSearch.getUsage()).isGreaterThan(0.25);
     long written = monteCarloTreeSearch.writeTo(candidateWriter);
+
+    // writeTo dumps nodes into pool.
+    assertThat(monteCarloTreeSearch.getUsage()).isWithin(TOLERANCE).of(1.0 / 200_000);
 
     assertThat(written).isGreaterThan(3000);
 
@@ -98,18 +177,19 @@ public class MonteCarloTreeSearchTest {
 
   @Test
   public void expandsUsingTensorFlowTicTacToe() {
-    TicTacToeService service = new TicTacToeService();
-    StateNodeService<TicTacToe> nodeService =
-        new StateNodeService(
-            service,
-            new GameOverEvaluator<>(
-                new TensorflowEvaluator<>(TensorflowEvaluator.TIC_TAC_TOE_V3, service)),
-            400000,
-            30);
+    MonteCarloTreeSearchSettings<TicTacToe> settings =
+        MonteCarloTreeSearchSettings.withDefaults()
+            .setNodesPoolCapacity(400000)
+            .setGameService(() -> TicTacToeService.INSTANCE)
+            .setEvaluator(
+                () ->
+                    new GameOverEvaluator<>(
+                        new TensorflowEvaluator<>(
+                            TensorflowEvaluator.TIC_TAC_TOE_V3, TicTacToeService.INSTANCE)))
+            .build();
 
-    nodeService.init();
-
-    MonteCarloTreeSearch monteCarloTreeSearch = new MonteCarloTreeSearch(nodeService);
+    MonteCarloTreeSearch monteCarloTreeSearch = new MonteCarloTreeSearch(settings);
+    monteCarloTreeSearch.init();
 
     int n = 1_000_000;
 
@@ -140,15 +220,19 @@ public class MonteCarloTreeSearchTest {
 
   @Test
   public void expandsUsingUniformConnect4() {
-    Connect4Service service = new Connect4Service();
-    StateNodeService<Connect4> nodeService =
-        new StateNodeService(
-            service,
-            new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(service.numMoves())),
-            6_000_000,
-            30);
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    System.out.println("Start");
+    System.out.println(stopwatch);
 
-    nodeService.init();
+    MonteCarloTreeSearchSettings<Connect4> settings =
+        MonteCarloTreeSearchSettings.withDefaults()
+            .setNodesPoolCapacity(6_000_000)
+            .setGameService(() -> Connect4Service.INSTANCE)
+            .setEvaluator(() -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(7)))
+            .build();
+
+    MonteCarloTreeSearch monteCarloTreeSearch = new MonteCarloTreeSearch(settings);
+    monteCarloTreeSearch.init();
 
     Runtime runtime = Runtime.getRuntime();
 
@@ -159,15 +243,11 @@ public class MonteCarloTreeSearchTest {
     long availableMemory = maxMemory - (allocatedMemory - freeMemory); // Available memory
     System.out.println("Available memory: " + availableMemory / (1024 * 1024) + "MB");
 
-    MonteCarloTreeSearch monteCarloTreeSearch = new MonteCarloTreeSearch(nodeService);
-
     int n = 100_000;
 
-    Stopwatch stopwatch = Stopwatch.createUnstarted();
-    System.out.println("Start");
-    stopwatch.start();
-
+    System.out.println("Init complete");
     System.out.println(stopwatch);
+
     for (int i = 0; i < n; i++) {
       monteCarloTreeSearch.expand();
     }
@@ -179,7 +259,7 @@ public class MonteCarloTreeSearchTest {
 
     assertThat(root.getVisits()).isEqualTo(n);
 
-    System.out.println(nodeService.toExample(root));
+    System.out.println(root.toExample());
 
     ByteArrayOutputStream outputStreamCandidate = new ByteArrayOutputStream();
     TFRecordWriter candidateWriter =
@@ -205,16 +285,24 @@ public class MonteCarloTreeSearchTest {
   }
 
   @Test
-  public void expandsAndPruneConnect4() {
-    Connect4Service service = new Connect4Service();
-    StateNodeService<Connect4> nodeService =
-        new StateNodeService(
-            service,
-            new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(service.numMoves())),
-            6_000_000,
-            30);
+  public void expandsUsingTensorflowConnect4() {
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    System.out.println("Start");
+    System.out.println(stopwatch);
 
-    nodeService.init();
+    MonteCarloTreeSearchSettings<Connect4> settings =
+            MonteCarloTreeSearchSettings.withDefaults()
+                    .setNodesPoolCapacity(6_000_000)
+                    .setGameService(() -> Connect4Service.INSTANCE)
+                    .setEvaluator(
+                            () ->
+                                    new GameOverEvaluator<>(
+                                            new TensorflowEvaluator<>(
+                                                    TensorflowEvaluator.CONNECT4_V1, Connect4Service.INSTANCE)))
+                    .build();
+
+    MonteCarloTreeSearch monteCarloTreeSearch = new MonteCarloTreeSearch(settings);
+    monteCarloTreeSearch.init();
 
     Runtime runtime = Runtime.getRuntime();
 
@@ -225,7 +313,68 @@ public class MonteCarloTreeSearchTest {
     long availableMemory = maxMemory - (allocatedMemory - freeMemory); // Available memory
     System.out.println("Available memory: " + availableMemory / (1024 * 1024) + "MB");
 
-    MonteCarloTreeSearch monteCarloTreeSearch = new MonteCarloTreeSearch(nodeService);
+    int n = 10_000;
+
+    System.out.println("Init complete");
+    System.out.println(stopwatch);
+
+    for (int i = 0; i < n; i++) {
+      monteCarloTreeSearch.expand();
+    }
+
+    System.out.println("Expand complete");
+    System.out.println(stopwatch);
+
+    StateNode root = monteCarloTreeSearch.getRoot();
+
+    assertThat(root.getVisits()).isEqualTo(n);
+
+    System.out.println(root.toExample());
+
+    ByteArrayOutputStream outputStreamCandidate = new ByteArrayOutputStream();
+    TFRecordWriter candidateWriter =
+            new TFRecordWriter(new DataOutputStream(outputStreamCandidate));
+
+    long written = monteCarloTreeSearch.writeTo(candidateWriter);
+
+    assertThat(written).isGreaterThan(1000);
+
+    System.out.println("Traverse complete");
+    System.out.println(stopwatch);
+
+    float[] input = root.state().encode();
+
+    Float[] expectedInput = new Float[42];
+    Arrays.fill(expectedInput, 0f);
+    assertThat(input).usingTolerance(TOLERANCE).containsExactlyElementsIn(expectedInput);
+    float[] output = root.encode();
+
+    assertThat(output)
+            .usingTolerance(0.02)
+            .containsExactly(0.25, 0.12, 0.13, 0.15, 0.17, 0.15, 0.13, 0.12);
+  }
+
+  @Test
+  public void expandsAndPruneConnect4() {
+    MonteCarloTreeSearchSettings<Connect4> settings =
+        MonteCarloTreeSearchSettings.withDefaults()
+            .setNodesPoolCapacity(6_000_000)
+            .setPruneMinVisits(10)
+            .setGameService(() -> Connect4Service.INSTANCE)
+            .setEvaluator(() -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(7)))
+            .build();
+
+    MonteCarloTreeSearch monteCarloTreeSearch = new MonteCarloTreeSearch(settings);
+    monteCarloTreeSearch.init();
+
+    Runtime runtime = Runtime.getRuntime();
+
+    long maxMemory = runtime.maxMemory(); // Maximum memory the JVM can use
+    long allocatedMemory = runtime.totalMemory(); // Currently allocated memory
+    long freeMemory = runtime.freeMemory(); // Free memory in the allocated space
+
+    long availableMemory = maxMemory - (allocatedMemory - freeMemory); // Available memory
+    System.out.println("Available memory: " + availableMemory / (1024 * 1024) + "MB");
 
     int n = 1000_000;
 
@@ -235,10 +384,10 @@ public class MonteCarloTreeSearchTest {
 
     System.out.println(stopwatch);
     for (int i = 0; i < n; i++) {
-      if (nodeService.getUsage() > 0.95) {
-        int before = nodeService.getSize();
-        monteCarloTreeSearch.prune(10);
-        int after = nodeService.getSize();
+      if (monteCarloTreeSearch.getUsage() > 0.95) {
+        int before = monteCarloTreeSearch.getSize();
+        monteCarloTreeSearch.prune();
+        int after = monteCarloTreeSearch.getSize();
 
         System.out.println("Prune with " + after + "  nodes, " + before + "  nodes");
         System.out.println(stopwatch);
@@ -253,7 +402,7 @@ public class MonteCarloTreeSearchTest {
 
     assertThat(root.getVisits()).isEqualTo(n);
 
-    System.out.println(nodeService.toExample(root));
+    System.out.println(root.toExample());
 
     ByteArrayOutputStream outputStreamCandidate = new ByteArrayOutputStream();
     TFRecordWriter candidateWriter =

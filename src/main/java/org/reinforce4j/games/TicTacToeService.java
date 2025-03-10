@@ -3,8 +3,12 @@ package org.reinforce4j.games;
 import org.reinforce4j.core.GameService;
 import org.reinforce4j.core.Player;
 
-public class TicTacToeService implements GameService<TicTacToe> {
+public enum TicTacToeService implements GameService<TicTacToe> {
+  INSTANCE;
+
   private static final TicTacToe INITIAL_STATE = new TicTacToe(new int[3][3], Player.ONE);
+  private final int NUM_MOVES = 9;
+  private final int NUM_FEATURES = 9;
 
   @Override
   public TicTacToe newInitialState() {
@@ -18,11 +22,11 @@ public class TicTacToeService implements GameService<TicTacToe> {
 
   @Override
   public int numMoves() {
-    return 9;
+    return NUM_MOVES;
   }
 
   @Override
   public int numFeatures() {
-    return 9;
+    return NUM_FEATURES;
   }
 }

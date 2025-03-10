@@ -4,10 +4,10 @@ import static com.google.common.truth.Truth.assertThat;
 
 import org.junit.jupiter.api.Test;
 import org.reinforce4j.evaluation.*;
+import org.reinforce4j.games.Connect4;
+import org.reinforce4j.games.Connect4Service;
 import org.reinforce4j.games.TicTacToe;
 import org.reinforce4j.games.TicTacToeService;
-import org.reinforce4j.montecarlo.StateNode;
-import org.reinforce4j.montecarlo.StateNodeService;
 
 public class TensorflowEvaluatorTest {
 
@@ -15,35 +15,30 @@ public class TensorflowEvaluatorTest {
 
   @Test
   public void shouldEvaluateCorrectly() {
-
-    StateNodeService<TicTacToe> stateNodeService =
-        new StateNodeService(
-            new TicTacToeService(),
-            new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(9)),
-            10000,
-            30);
-
-    stateNodeService.init();
-
     TensorflowEvaluator tensorflowBatchEvaluator =
-        new TensorflowEvaluator(
-            TensorflowEvaluator.TIC_TAC_TOE_V1, stateNodeService.getGameService());
+        new TensorflowEvaluator(TensorflowEvaluator.TIC_TAC_TOE_V1, TicTacToeService.INSTANCE);
 
-    TicTacToe game1 = stateNodeService.getGameService().newInitialState();
-    TicTacToe game2 = stateNodeService.getGameService().newInitialState();
+    TicTacToe game1 = TicTacToeService.INSTANCE.newInitialState();
+    TicTacToe game2 = TicTacToeService.INSTANCE.newInitialState();
     game2.move(4);
-    TicTacToe game3 = stateNodeService.getGameService().newInitialState();
+    TicTacToe game3 = TicTacToeService.INSTANCE.newInitialState();
     game3.move(4);
     game3.move(1);
 
-    StateNode<TicTacToe> node1 = stateNodeService.acquire(game1);
-    StateNode<TicTacToe> node2 = stateNodeService.acquire(game2);
-    StateNode<TicTacToe> node3 = stateNodeService.acquire(game3);
+    GameStateAndEvaluation<TicTacToe> node1 =
+        GameStateAndEvaluationImpl.create(
+            game1, new StateEvaluation(TicTacToeService.INSTANCE.numMoves()));
+    GameStateAndEvaluation<TicTacToe> node2 =
+        GameStateAndEvaluationImpl.create(
+            game2, new StateEvaluation(TicTacToeService.INSTANCE.numMoves()));
+    GameStateAndEvaluation<TicTacToe> node3 =
+        GameStateAndEvaluationImpl.create(
+            game3, new StateEvaluation(TicTacToeService.INSTANCE.numMoves()));
 
     tensorflowBatchEvaluator.evaluate(node1, node2, null, node3);
 
     assertThat(node1.evaluation().getValue()).isWithin(TOLERANCE).of(0.3031689f);
-    assertThat(node1.getPolicy())
+    assertThat(node1.evaluation().getPolicy())
         .usingTolerance(TOLERANCE)
         .containsExactly(
             0.11732529f,
@@ -58,7 +53,7 @@ public class TensorflowEvaluatorTest {
         .inOrder();
 
     assertThat(node2.evaluation().getValue()).isWithin(TOLERANCE).of(-0.48276043f);
-    assertThat(node2.getPolicy())
+    assertThat(node2.evaluation().getPolicy())
         .usingTolerance(TOLERANCE)
         .containsExactly(
             0.15116668f,
@@ -73,7 +68,7 @@ public class TensorflowEvaluatorTest {
         .inOrder();
 
     assertThat(node3.evaluation().getValue()).isWithin(TOLERANCE).of(0.539513f);
-    assertThat(node3.getPolicy())
+    assertThat(node3.evaluation().getPolicy())
         .usingTolerance(TOLERANCE)
         .containsExactly(
             0.15158418f,
@@ -90,7 +85,7 @@ public class TensorflowEvaluatorTest {
 
   @Test
   public void shouldEvaluateCorrectlyRootState() {
-    TicTacToeService service = new TicTacToeService();
+    TicTacToeService service = TicTacToeService.INSTANCE;
     TicTacToe root = service.newInitialState();
     StateEvaluation evaluation = new StateEvaluation(service.numMoves());
 
@@ -121,7 +116,7 @@ public class TensorflowEvaluatorTest {
 
   @Test
   public void evaluateManyTimesCorrectly() {
-    TicTacToeService service = new TicTacToeService();
+    TicTacToeService service = TicTacToeService.INSTANCE;
     TicTacToe stateOne = service.newInitialState();
     TicTacToe stateTwo = service.newInitialState();
     stateTwo.move(4);
@@ -154,6 +149,55 @@ public class TensorflowEvaluatorTest {
               0.10257506f,
               0.11598862f
             })
+        .inOrder();
+  }
+
+  @Test
+  public void shouldEvaluateCorrectlyConnect4() {
+    TensorflowEvaluator<Connect4> tensorflowBatchEvaluator =
+        new TensorflowEvaluator<>(TensorflowEvaluator.CONNECT4_V1, Connect4Service.INSTANCE);
+
+    Connect4 game1 = Connect4Service.INSTANCE.newInitialState();
+    Connect4 game2 = Connect4Service.INSTANCE.newInitialState();
+    game2.move(3);
+    Connect4 game3 = Connect4Service.INSTANCE.newInitialState();
+    game3.move(3);
+    game3.move(3);
+    game3.move(2);
+    game3.move(3);
+    game3.move(1);
+
+    GameStateAndEvaluation<Connect4> node1 =
+        GameStateAndEvaluationImpl.create(
+            game1, new StateEvaluation(Connect4Service.INSTANCE.numMoves()));
+    GameStateAndEvaluation<Connect4> node2 =
+        GameStateAndEvaluationImpl.create(
+            game2, new StateEvaluation(Connect4Service.INSTANCE.numMoves()));
+    GameStateAndEvaluationImpl<Connect4> node3 =
+        GameStateAndEvaluationImpl.create(
+            game3, new StateEvaluation(Connect4Service.INSTANCE.numMoves()));
+
+    tensorflowBatchEvaluator.evaluate(node1, node2, null, node3);
+
+    assertThat(node1.evaluation().getValue()).isWithin(TOLERANCE).of(0.26891425f);
+    assertThat(node1.evaluation().getPolicy())
+        .usingTolerance(TOLERANCE)
+        .containsExactly(
+            0.12451199, 0.14001906, 0.14999479, 0.1711741, 0.15084055, 0.13988361, 0.123575956)
+        .inOrder();
+
+    assertThat(node2.evaluation().getValue()).isWithin(TOLERANCE).of(-0.4419618f);
+    assertThat(node2.evaluation().getPolicy())
+        .usingTolerance(TOLERANCE)
+        .containsExactly(
+            0.10363181, 0.1499101, 0.17044207, 0.13557483, 0.1785546, 0.14838561, 0.113500915)
+        .inOrder();
+
+    assertThat(node3.evaluation().getValue()).isWithin(TOLERANCE).of(-0.95440906f);
+    assertThat(node3.evaluation().getPolicy())
+        .usingTolerance(TOLERANCE)
+        .containsExactly(
+            0.23687348, 0.0105213635, 0.01199178, 0.4101716, 0.31526363, 0.007029804, 0.008148408)
         .inOrder();
   }
 }

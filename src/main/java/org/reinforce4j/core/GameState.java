@@ -18,8 +18,5 @@ public interface GameState<T extends GameState> {
   // Copies internal state from the other.
   void copy(T other);
 
-  // Encodes the state into buffer. Throws an error if the buffer has unexpected size.
-  void encode(float[] buffer);
-
   float[] encode();
 }

@@ -7,7 +7,7 @@ import org.reinforce4j.core.GameState;
 public abstract class GameStateAndEvaluationImpl<T extends GameState>
     implements GameStateAndEvaluation<T> {
 
-  public static <T extends GameState> GameStateAndEvaluationImpl create(
+  public static <T extends GameState> GameStateAndEvaluationImpl<T> create(
       T state, StateEvaluation evaluation) {
     return new AutoValue_GameStateAndEvaluationImpl(state, evaluation);
   }

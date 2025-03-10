@@ -4,11 +4,12 @@ import com.google.common.base.Stopwatch;
 import java.nio.file.Paths;
 import org.reinforce4j.evaluation.GameOverEvaluator;
 import org.reinforce4j.evaluation.ZeroValueUniformEvaluator;
+import org.reinforce4j.games.TicTacToe;
 import org.reinforce4j.games.TicTacToeService;
 import org.reinforce4j.learning.execute.ModelTrainerExecutor;
 import org.reinforce4j.learning.training.ExampleGen;
 import org.reinforce4j.learning.training.ExampleGenSettings;
-import org.reinforce4j.montecarlo.StateNodeService;
+import org.reinforce4j.montecarlo.MonteCarloTreeSearchSettings;
 
 public class ReinforcementLearningPipeline {
 
@@ -27,12 +28,11 @@ public class ReinforcementLearningPipeline {
     long nSamples =
         ExampleGen.generate(
             ExampleGenSettings.withDefaults(
-                    () ->
-                        new StateNodeService(
-                            new TicTacToeService(),
-                            new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(9)),
-                            10000,
-                            30))
+                    MonteCarloTreeSearchSettings.<TicTacToe>withDefaults()
+                        .setGameService(() -> TicTacToeService.INSTANCE)
+                        .setEvaluator(
+                            () -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(9)))
+                        .build())
                 .setBasePath(BASE_PATH)
                 .build());
 

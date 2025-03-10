@@ -71,12 +71,21 @@ class Connect4Test {
   }
 
   @Test
+  void testEncode() {
+    Connect4 game = new Connect4(new int[6][7], Player.ONE);
+
+    game.move(3);
+    game.move(3);
+    assertThat(game.encode()).usingTolerance(0.0001).containsExactly(new float[] {0, 0, 0, 0});
+  }
+
+  @Test
   public void copiesStates() {
-    Connect4 from = (new Connect4Service()).newInitialState();
+    Connect4 from = (Connect4Service.INSTANCE).newInitialState();
     from.move(1);
     from.move(5);
 
-    Connect4 to = (new Connect4Service()).newInitialState();
+    Connect4 to = (Connect4Service.INSTANCE).newInitialState();
     assertThat(to).isNotEqualTo(from);
 
     to.copy(from);

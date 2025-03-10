@@ -1,6 +1,5 @@
 package org.reinforce4j.games;
 
-import com.google.common.base.Preconditions;
 import java.util.Arrays;
 import org.reinforce4j.core.GameState;
 import org.reinforce4j.core.Player;
@@ -47,20 +46,14 @@ public class TicTacToe implements GameState<TicTacToe> {
   }
 
   @Override
-  public void encode(float[] buffer) {
-    Preconditions.checkArgument(buffer.length == 9);
+  public float[] encode() {
+    float[] buffer = new float[9];
     for (int move = 0; move < 9; move++) {
       int i = move / 3;
       int j = move % 3;
 
       buffer[move] = cells[i][j];
     }
-  }
-
-  @Override
-  public float[] encode() {
-    float[] buffer = new float[9];
-    encode(buffer);
     return buffer;
   }
 

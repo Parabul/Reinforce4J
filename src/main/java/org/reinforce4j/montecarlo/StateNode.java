@@ -5,10 +5,16 @@ import java.util.Arrays;
 import org.reinforce4j.core.*;
 import org.reinforce4j.evaluation.GameStateAndEvaluation;
 import org.reinforce4j.evaluation.StateEvaluation;
+import org.reinforce4j.utils.TensorFlowUtils;
+import org.tensorflow.example.Example;
 
 @SuppressWarnings("unchecked")
 // Wrapper around game state that represents a single node in the Monte Carlo Search Tree.
 public class StateNode<T extends GameState> implements GameStateAndEvaluation<T> {
+
+  // Since the output could be all zeros (when all moves result in loss), we add small epsilon for
+  // each output to keep numerical operations safe.
+  private static final float EPSILON = 1E-6f;
 
   // Array of child state, has size `num_moves`. Unreachable states (moves not allowed) are
   // populated with zeros.
@@ -91,10 +97,6 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
     return !initialized || state.isGameOver();
   }
 
-  public float[] getPolicy() {
-    return evaluation().getPolicy();
-  }
-
   public long getVisits() {
     return outcomes.getTotalOutcomes();
   }
@@ -120,14 +122,8 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
         .toString();
   }
 
-  /** Returns encoded representation of the outcomes observed in the given node. */
   public float[] encode() {
     float[] outputs = new float[childStates.length + 1];
-    encode(outputs);
-    return outputs;
-  }
-
-  public void encode(float[] outputs) {
     if (isLeaf()) {
       throw new IllegalStateException("Leaf node can not be encoded");
     }
@@ -139,7 +135,7 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
         continue;
       }
 
-      outputs[move + 1] = childStates[move].outcomes.winRateFor(state.getCurrentPlayer());
+      outputs[move + 1] = childStates[move].outcomes.winRateFor(state.getCurrentPlayer()) + EPSILON;
       sum += outputs[move + 1];
     }
 
@@ -147,5 +143,11 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
     for (int move = 0; move < childStates.length; move++) {
       outputs[move + 1] = outputs[move + 1] / sum;
     }
+
+    return outputs;
+  }
+
+  public Example toExample() {
+    return TensorFlowUtils.toExample(state.encode(), encode());
   }
 }

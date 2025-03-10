@@ -7,7 +7,7 @@ import org.apache.commons.rng.simple.RandomSource;
 // Strategy that estimates values of the alternative moves using Predictive Upper Confidence Bound:
 // U(s,a) = Q(s,a) + c * P(s,a) * SQRT(N(s)) / (1+N(s,a)), where `c` is exploration weight;
 // P(s,a) = (1 - epsilon) * P_prior(s,a) + epsilon * Dir(1.0), where `epsilon` is noise weight.
-class Strategy {
+class NodeSelectionStrategy {
 
   // A constant that controls the balance between exploration and exploitation.
   private static final float EXPLORATION_WEIGHT = 4;
@@ -17,7 +17,7 @@ class Strategy {
   private final DirichletSampler dirichlet;
   private final int numMoves;
 
-  Strategy(int numMoves) {
+  NodeSelectionStrategy(int numMoves) {
     this.numMoves = numMoves;
     this.dirichlet = DirichletSampler.symmetric(RandomSource.JDK.create(), numMoves, 1);
   }
@@ -47,7 +47,7 @@ class Strategy {
       //        return childStates[i];
       //      }
 
-      float prior_probability = stateNode.getPolicy()[i];
+      float prior_probability = stateNode.evaluation().getPolicy()[i];
 
       float adjusted_probability =
           (float) (prior_probability * (1 - NOISE_WEIGHT) + NOISE_WEIGHT * noises[i]);

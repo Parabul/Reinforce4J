@@ -9,7 +9,7 @@ public class TicTacToeTest {
 
   @Test
   public void expectedInitialState() {
-    TicTacToe root = (new TicTacToeService()).newInitialState();
+    TicTacToe root = TicTacToeService.INSTANCE.newInitialState();
 
     assertThat(root.isGameOver()).isFalse();
     assertThat(root.getCurrentPlayer()).isEqualTo(Player.ONE);
@@ -21,7 +21,7 @@ public class TicTacToeTest {
 
   @Test
   public void isNotAllowedSameMove() {
-    TicTacToe root = (new TicTacToeService()).newInitialState();
+    TicTacToe root = TicTacToeService.INSTANCE.newInitialState();
 
     assertThat(root.isMoveAllowed(5)).isTrue();
     root.move(5);
@@ -30,7 +30,7 @@ public class TicTacToeTest {
 
   @Test
   public void detectsGameOver() {
-    TicTacToe root = (new TicTacToeService()).newInitialState();
+    TicTacToe root = TicTacToeService.INSTANCE.newInitialState();
 
     root.move(0);
     assertThat(root.isGameOver()).isFalse();
@@ -47,8 +47,8 @@ public class TicTacToeTest {
 
   @Test
   public void testEquals() {
-    TicTacToe alpha = (new TicTacToeService()).newInitialState();
-    TicTacToe beta = (new TicTacToeService()).newInitialState();
+    TicTacToe alpha = TicTacToeService.INSTANCE.newInitialState();
+    TicTacToe beta = TicTacToeService.INSTANCE.newInitialState();
     assertThat(alpha).isEqualTo(beta);
 
     alpha.move(1);
@@ -65,11 +65,11 @@ public class TicTacToeTest {
 
   @Test
   public void copiesStates() {
-    TicTacToe from = (new TicTacToeService()).newInitialState();
+    TicTacToe from = TicTacToeService.INSTANCE.newInitialState();
     from.move(1);
     from.move(5);
 
-    TicTacToe to = (new TicTacToeService()).newInitialState();
+    TicTacToe to = TicTacToeService.INSTANCE.newInitialState();
     assertThat(to).isNotEqualTo(from);
 
     to.copy(from);

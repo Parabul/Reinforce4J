@@ -50,10 +50,10 @@ reshaped = layers.Reshape((6, 7, 1))(input_layer)  # Reshape to 6x7x1
 
 # CNN Feature Extraction (Reduced Filters & Layers)
 conv1 = layers.Conv2D(16, (3,3), activation='relu', padding='same',
-                      kernel_regularizer=regularizers.l2(0.0005))(reshaped)
+                      kernel_regularizer=regularizers.l2(0.001))(reshaped)
 conv1 = layers.BatchNormalization()(conv1)  # Normalize activations
 conv2 = layers.Conv2D(32, (3,3), activation='relu', padding='same',
-                      kernel_regularizer=regularizers.l2(0.0005))(conv1)
+                      kernel_regularizer=regularizers.l2(0.001))(conv1)
 flat = layers.Flatten()(conv2)
 
 # Fully Connected Layers (Smaller & Regularized)

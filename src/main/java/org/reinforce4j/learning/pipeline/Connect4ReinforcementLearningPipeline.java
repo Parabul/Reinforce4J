@@ -8,7 +8,7 @@ import org.reinforce4j.games.Connect4Service;
 import org.reinforce4j.learning.execute.ModelTrainerExecutor;
 import org.reinforce4j.learning.training.ExampleGen;
 import org.reinforce4j.learning.training.ExampleGenSettings;
-import org.reinforce4j.montecarlo.StateNodeService;
+import org.reinforce4j.montecarlo.MonteCarloTreeSearchSettings;
 
 public class Connect4ReinforcementLearningPipeline {
 
@@ -27,12 +27,11 @@ public class Connect4ReinforcementLearningPipeline {
     long nSamples =
         ExampleGen.generate(
             ExampleGenSettings.withDefaults(
-                    () ->
-                        new StateNodeService(
-                            new Connect4Service(),
-                            new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(7)),
-                            10000,
-                            30))
+                    MonteCarloTreeSearchSettings.withDefaults()
+                        .setGameService(() -> Connect4Service.INSTANCE)
+                        .setEvaluator(
+                            () -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(7)))
+                        .build())
                 .setBasePath(BASE_PATH)
                 .build());
 
