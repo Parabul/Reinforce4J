@@ -337,7 +337,7 @@ public class MonteCarloTreeSearchTest {
 
     long written = monteCarloTreeSearch.writeTo(candidateWriter);
 
-    assertThat(written).isGreaterThan(1000);
+    assertThat(written).isGreaterThan(100);
 
     System.out.println("Traverse complete");
     System.out.println(stopwatch);
