@@ -1,9 +1,9 @@
-package org.reinforce4j.learning.evaluation;
+package org.reinforce4j.evaluation;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.base.Stopwatch;
 import org.junit.jupiter.api.Test;
-import org.reinforce4j.evaluation.*;
 import org.reinforce4j.games.Connect4;
 import org.reinforce4j.games.Connect4Service;
 import org.reinforce4j.games.TicTacToe;
@@ -35,7 +35,10 @@ public class TensorflowEvaluatorTest {
         GameStateAndEvaluationImpl.create(
             game3, new StateEvaluation(TicTacToeService.INSTANCE.numMoves()));
 
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    System.out.println("Start");
     tensorflowBatchEvaluator.evaluate(node1, node2, null, node3);
+    System.out.println("End: " + stopwatch.stop());
 
     assertThat(node1.evaluation().getValue()).isWithin(TOLERANCE).of(0.3031689f);
     assertThat(node1.evaluation().getPolicy())
@@ -177,27 +180,31 @@ public class TensorflowEvaluatorTest {
         GameStateAndEvaluationImpl.create(
             game3, new StateEvaluation(Connect4Service.INSTANCE.numMoves()));
 
-    tensorflowBatchEvaluator.evaluate(node1, node2, null, node3);
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    System.out.println("Start");
+    tensorflowBatchEvaluator.evaluate(node1, null, node3);
+    tensorflowBatchEvaluator.evaluate(node2, null);
+    System.out.println("End: " + stopwatch.stop());
 
-    assertThat(node1.evaluation().getValue()).isWithin(TOLERANCE).of(0.26891425f);
+    assertThat(node1.evaluation().getValue()).isWithin(TOLERANCE).of(0.21751882f);
     assertThat(node1.evaluation().getPolicy())
         .usingTolerance(TOLERANCE)
         .containsExactly(
-            0.12451199, 0.14001906, 0.14999479, 0.1711741, 0.15084055, 0.13988361, 0.123575956)
+                0.11898205, 0.14070407, 0.1519281, 0.1711144, 0.15199628, 0.14285956, 0.12241552)
         .inOrder();
 
-    assertThat(node2.evaluation().getValue()).isWithin(TOLERANCE).of(-0.4419618f);
+    assertThat(node2.evaluation().getValue()).isWithin(TOLERANCE).of(-0.28411743f);
     assertThat(node2.evaluation().getPolicy())
         .usingTolerance(TOLERANCE)
         .containsExactly(
-            0.10363181, 0.1499101, 0.17044207, 0.13557483, 0.1785546, 0.14838561, 0.113500915)
+                0.10639307, 0.14400896, 0.16923025, 0.16191941, 0.16771331, 0.13361344, 0.1171216)
         .inOrder();
 
-    assertThat(node3.evaluation().getValue()).isWithin(TOLERANCE).of(-0.95440906f);
+    assertThat(node3.evaluation().getValue()).isWithin(TOLERANCE).of(-0.90172696f);
     assertThat(node3.evaluation().getPolicy())
         .usingTolerance(TOLERANCE)
         .containsExactly(
-            0.23687348, 0.0105213635, 0.01199178, 0.4101716, 0.31526363, 0.007029804, 0.008148408)
+                0.15628283, 0.0015531139, 0.0010194125, 0.6490803, 0.19007017, 9.985811E-4, 9.955459E-4)
         .inOrder();
   }
 }

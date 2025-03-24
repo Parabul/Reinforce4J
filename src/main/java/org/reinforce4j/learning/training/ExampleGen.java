@@ -61,11 +61,20 @@ public class ExampleGen<T extends GameState> implements Callable<Long> {
         new MonteCarloTreeSearch<>(settings.monteCarloTreeSearchSettings());
     monteCarloTreeSearch.init();
 
+    Runtime runtime = Runtime.getRuntime();
+
+    long maxMemory = runtime.maxMemory(); // Maximum memory the JVM can use
+    long allocatedMemory = runtime.totalMemory(); // Currently allocated memory
+    long freeMemory = runtime.freeMemory(); // Free memory in the allocated space
+
+    long availableMemory = maxMemory - (allocatedMemory - freeMemory); // Available memory
+    System.out.println("Available memory: " + availableMemory / (1024 * 1024) + "MB");
+
     for (int iter = 0; iter < settings.numIterations(); iter++) {
       System.out.println("Example gen iter: " + iter);
 
       for (int i = 0; i < settings.numExpansions(); i++) {
-        if (monteCarloTreeSearch.getUsage() > 0.99) {
+        if (monteCarloTreeSearch.getUsage() > 0.999) {
           double before = monteCarloTreeSearch.getUsage();
           monteCarloTreeSearch.prune();
           double after = monteCarloTreeSearch.getUsage();

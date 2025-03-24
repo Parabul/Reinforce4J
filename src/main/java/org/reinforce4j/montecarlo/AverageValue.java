@@ -27,9 +27,10 @@ public class AverageValue {
     this.support = other.support;
   }
 
-  public void set(Player player, double value) {
+  public AverageValue set(Player player, double value) {
     totalObservedValue = value * player.getMultiplier();
     support = 1;
+    return this;
   }
 
   public void add(final AverageValue other) {

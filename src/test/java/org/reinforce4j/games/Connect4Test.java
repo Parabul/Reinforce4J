@@ -12,14 +12,14 @@ class Connect4Test {
 
   @BeforeEach
   void setUp() {
-    game = new Connect4(new int[6][7], Player.ONE);
+    game = new Connect4(new byte[6][7], Player.ONE);
   }
 
   @Test
   void testInitialBoardIsEmpty() {
-    int[][] board = game.getBoard();
-    for (int[] row : board) {
-      for (int cell : row) {
+    byte[][] board = game.getBoard();
+    for (byte[] row : board) {
+      for (byte cell : row) {
         assertEquals(0, cell);
       }
     }
@@ -72,7 +72,7 @@ class Connect4Test {
 
   @Test
   void testEncode() {
-    Connect4 game = new Connect4(new int[6][7], Player.ONE);
+    Connect4 game = new Connect4(new byte[6][7], Player.ONE);
 
     game.move(3);
     game.move(3);
@@ -100,7 +100,7 @@ class Connect4Test {
 
     Connect4 almostGameOver =
         new Connect4(
-            new int[][] {
+            new byte[][] {
               {1, -1, 1, 1, -1, 1, 0},
               {-1, 1, 1, -1, -1, 1, 1},
               {1, -1, -1, -1, 1, 1, -1},

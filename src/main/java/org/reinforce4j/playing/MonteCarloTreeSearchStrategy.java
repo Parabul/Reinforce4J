@@ -32,6 +32,13 @@ public class MonteCarloTreeSearchStrategy<T extends GameState> implements Strate
     if (targetNode.getVisits() < MIN_VISITS) {
       long expansions = MIN_VISITS - targetNode.getVisits();
       for (int i = 0; i < expansions; i++) {
+        if (monteCarloTreeSearch.getUsage() > 0.99) {
+          int before = monteCarloTreeSearch.getSize();
+          monteCarloTreeSearch.prune();
+          int after = monteCarloTreeSearch.getSize();
+
+          System.out.println("Prune with " + after + "  nodes, " + before + "  nodes");
+        }
         monteCarloTreeSearch.expand(targetNode);
       }
     }

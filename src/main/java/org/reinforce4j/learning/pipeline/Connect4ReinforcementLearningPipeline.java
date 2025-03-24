@@ -4,6 +4,7 @@ import com.google.common.base.Stopwatch;
 import java.nio.file.Paths;
 import org.reinforce4j.evaluation.GameOverEvaluator;
 import org.reinforce4j.evaluation.ZeroValueUniformEvaluator;
+import org.reinforce4j.games.Connect4;
 import org.reinforce4j.games.Connect4Service;
 import org.reinforce4j.learning.execute.ModelTrainerExecutor;
 import org.reinforce4j.learning.training.ExampleGen;
@@ -27,11 +28,18 @@ public class Connect4ReinforcementLearningPipeline {
     long nSamples =
         ExampleGen.generate(
             ExampleGenSettings.withDefaults(
-                    MonteCarloTreeSearchSettings.withDefaults()
+                    MonteCarloTreeSearchSettings.<Connect4>builder()
+                            .setBackPropagationStackCapacity(50)
+                            .setNodesPoolCapacity(4_000_000)
+                            .setPruneMinVisits(10)
+                            .setWriteMinVisits(500)
                         .setGameService(() -> Connect4Service.INSTANCE)
                         .setEvaluator(
                             () -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(7)))
                         .build())
+                    .setNumExpansions(10_000_000)
+                    .setNumThreads(5)
+                    .setNumIterations(20)
                 .setBasePath(BASE_PATH)
                 .build());
 

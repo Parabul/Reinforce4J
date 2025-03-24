@@ -1,6 +1,5 @@
 package org.reinforce4j.utils;
 
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -21,7 +20,7 @@ public class RandomStateGenerator<T extends GameState> {
     this.strategy = new RandomStrategy<>(service);
   }
 
-  public T next() {
+  public List<Integer> next() {
     T state = gameService.newInitialState();
     int numMoves = random.nextInt(maxNumMoves) + 1;
     List<Integer> history = new ArrayList<>();
@@ -32,6 +31,6 @@ public class RandomStateGenerator<T extends GameState> {
       state.move(move);
     }
 
-    return state;
+    return history;
   }
 }

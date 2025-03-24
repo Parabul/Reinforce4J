@@ -4,6 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.reinforce4j.games.TicTacToe;
@@ -17,9 +18,9 @@ class RandomStateGeneratorTest {
         new RandomStateGenerator<>(TicTacToeService.INSTANCE, 4);
     Set<TicTacToe> states = new HashSet<>();
     for (int i = 0; i < 1000; i++) {
-      TicTacToe state = generator.next();
-      assertThat(state).isNotEqualTo(TicTacToeService.INSTANCE.initialState());
-      states.add(state);
+      List<Integer> history = generator.next();
+      assertThat(history.size()).isGreaterThan(0);
+      assertThat(history.size()).isAtMost(4);
     }
 
     assertThat(states.size()).isGreaterThan(400);

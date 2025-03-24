@@ -6,13 +6,14 @@ import org.reinforce4j.core.Player;
 
 public class TicTacToe implements GameState<TicTacToe> {
 
-  private final int[][] cells = new int[3][3];
+  private final byte[][] cells = new byte[3][3];
+  private final byte PLAYER_ONE_VALUE = 1;
+  private final byte PLAYER_TWO_VALUE = -1;
   private Player currentPlayer;
-
   private boolean isGameOver = false;
   private Player winner = null;
 
-  /*package private*/ TicTacToe(int[][] cells, Player currentPlayer) {
+  /*package private*/ TicTacToe(byte[][] cells, Player currentPlayer) {
     for (int i = 0; i < 3; i++) {
       System.arraycopy(cells[i], 0, this.cells[i], 0, 3);
     }
@@ -29,7 +30,7 @@ public class TicTacToe implements GameState<TicTacToe> {
     this.isGameOver = other.isGameOver;
   }
 
-  public int[][] getCells() {
+  public byte[][] getCells() {
     return cells;
   }
 
@@ -61,7 +62,7 @@ public class TicTacToe implements GameState<TicTacToe> {
   public void move(int move) {
     int i = move / 3;
     int j = move % 3;
-    cells[i][j] = currentPlayer == Player.ONE ? 1 : -1;
+    cells[i][j] = currentPlayer == Player.ONE ? PLAYER_ONE_VALUE : PLAYER_TWO_VALUE;
 
     isGameOver = checkGameOver();
     if (isGameOver) {

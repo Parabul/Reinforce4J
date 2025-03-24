@@ -52,7 +52,7 @@ public class MonteCarloTreeSearch<T extends GameState> {
     Player winner = currentNode.state().getWinner();
 
     // Draw has no value, otherwise 1 to the winner.
-    AverageValue accumulatedValue = new AverageValue(1, winner);
+    AverageValue accumulatedValue = backPropagationStack.acquire(winner, 1);
 
     // Update leaf node
     currentNode.update(winner, accumulatedValue);
@@ -61,10 +61,13 @@ public class MonteCarloTreeSearch<T extends GameState> {
     do {
       if (backPropagationStack.getAverageValue() != null) {
         accumulatedValue.add(backPropagationStack.getAverageValue());
+        backPropagationStack.release(backPropagationStack.getAverageValue());
       }
       backPropagationStack.getStateNode().update(winner, accumulatedValue);
       backPropagationStack.next();
     } while (backPropagationStack.hasNext());
+
+    backPropagationStack.release(accumulatedValue);
   }
 
   public void init() {
@@ -96,7 +99,7 @@ public class MonteCarloTreeSearch<T extends GameState> {
 
     evaluator.evaluate(stateNode.getChildStates());
 
-    AverageValue averageValue = new AverageValue();
+    AverageValue averageValue = backPropagationStack.acquire(Player.ONE, 0);
     for (int move = 0; move < gameService.numMoves(); move++) {
       if (!stateNode.state().isMoveAllowed(move)) {
         continue;
@@ -115,7 +118,7 @@ public class MonteCarloTreeSearch<T extends GameState> {
   // `writer`;
   public long writeTo(TFRecordWriter writer) {
     long written = 0;
-    Stack<StateNode> stack = new Stack<>();
+    Deque<StateNode> stack = new ArrayDeque<>();
     stack.push(root);
 
     while (!stack.isEmpty()) {
@@ -143,7 +146,7 @@ public class MonteCarloTreeSearch<T extends GameState> {
 
   /** Traverses the tree and prunes nodes with less than `minVisits` visits. */
   public void prune() {
-    Stack<StateNode> stack = new Stack<>();
+    Deque<StateNode> stack = new ArrayDeque<>();
     stack.push(root);
 
     while (!stack.isEmpty()) {
@@ -166,7 +169,7 @@ public class MonteCarloTreeSearch<T extends GameState> {
   private void pruneChildNodes(StateNode<T> node) {
     node.setInitialized(false);
 
-    Stack<StateNode> stack = new Stack<>();
+    Deque<StateNode> stack = new ArrayDeque<>();
     for (int move = 0; move < gameService.numMoves(); move++) {
       if (node.getChildStates()[move] != null) {
         stack.push(node.getChildStates()[move]);

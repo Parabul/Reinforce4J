@@ -39,7 +39,7 @@ public class PlayWithStrategyConnect4 {
 
     System.out.println("Init complete: " + stopwatch);
 
-    int n = 1_000_000;
+    int n = 10_000;
 
     for (int i = 0; i < n; i++) {
       if (monteCarloTreeSearch.getUsage() > 0.99) {

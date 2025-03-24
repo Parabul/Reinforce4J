@@ -215,5 +215,11 @@
             <artifactId>auto-value</artifactId>
             <version>1.11.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.microsoft.onnxruntime</groupId>
+            <artifactId>onnxruntime_gpu</artifactId>
+            <version>1.21.0</version>
+        </dependency>
     </dependencies>
 </project>

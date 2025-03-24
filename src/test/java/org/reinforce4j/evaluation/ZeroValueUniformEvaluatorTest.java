@@ -1,9 +1,8 @@
-package org.reinforce4j.learning.evaluation;
+package org.reinforce4j.evaluation;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import org.junit.jupiter.api.Test;
-import org.reinforce4j.evaluation.*;
 import org.reinforce4j.games.TicTacToe;
 import org.reinforce4j.games.TicTacToeService;
 

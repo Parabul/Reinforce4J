@@ -10,16 +10,17 @@ import org.apache.commons.rng.simple.RandomSource;
 class NodeSelectionStrategy {
 
   // A constant that controls the balance between exploration and exploitation.
-  private static final float EXPLORATION_WEIGHT = 4;
+  private static final float EXPLORATION_WEIGHT = 6;
   // A constant that determines how much noise to add to prior win probabilities.
-  private static final float NOISE_WEIGHT = 0.25f;
+  private static final float NOISE_WEIGHT = 0.15f;
 
   private final DirichletSampler dirichlet;
   private final int numMoves;
 
   NodeSelectionStrategy(int numMoves) {
     this.numMoves = numMoves;
-    this.dirichlet = DirichletSampler.symmetric(RandomSource.JDK.create(), numMoves, 1);
+    this.dirichlet =
+        DirichletSampler.symmetric(RandomSource.XO_RO_SHI_RO_128_PP.create(), numMoves, 1);
   }
 
   // Return an index of the child node that has the highest estimated value. Assumes that stateNode
@@ -53,16 +54,12 @@ class NodeSelectionStrategy {
           (float) (prior_probability * (1 - NOISE_WEIGHT) + NOISE_WEIGHT * noises[i]);
 
       float exploration =
-          (float)
-              (EXPLORATION_WEIGHT
-                  * adjusted_probability
-                  * parentVisitsSqrt
-                  / (1 + childState.getVisits()));
-
+          (float) (adjusted_probability * parentVisitsSqrt / (1 + childState.getVisits()));
       float exploitation =
           childState.getAverageValue().getValue(stateNode.state().getCurrentPlayer());
 
-      float estimatedValue = exploitation + exploration;
+
+      float estimatedValue =  exploitation + EXPLORATION_WEIGHT * exploration;
       values[i] = estimatedValue;
       if (estimatedValue > max) {
         max = estimatedValue;
