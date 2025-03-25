@@ -7,8 +7,13 @@ import com.google.common.base.Stopwatch;
 import org.junit.jupiter.api.Test;
 import org.reinforce4j.games.Connect4;
 import org.reinforce4j.games.Connect4Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class OnnxEvaluatorTest {
+
+
+  private static final Logger logger = LoggerFactory.getLogger(OnnxEvaluatorTest.class);
 
   private static final float TOLERANCE = 0.0001f;
 
@@ -38,10 +43,10 @@ class OnnxEvaluatorTest {
             game3, new StateEvaluation(Connect4Service.INSTANCE.numMoves()));
 
     Stopwatch stopwatch = Stopwatch.createStarted();
-    System.out.println("Start");
+    logger.info("Start");
     evaluator.evaluate(node1, null, node3);
     evaluator.evaluate(node2, null);
-    System.out.println("End: " + stopwatch.stop());
+    logger.info("End: " + stopwatch.stop());
 
     assertThat(node1.evaluation().getValue()).isWithin(TOLERANCE).of(0.21751882f);
     assertThat(node1.evaluation().getPolicy())

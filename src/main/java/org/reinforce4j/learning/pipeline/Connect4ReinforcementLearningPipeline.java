@@ -10,10 +10,14 @@ import org.reinforce4j.learning.execute.ModelTrainerExecutor;
 import org.reinforce4j.learning.training.ExampleGen;
 import org.reinforce4j.learning.training.ExampleGenSettings;
 import org.reinforce4j.montecarlo.MonteCarloTreeSearchSettings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Connect4ReinforcementLearningPipeline {
 
   private static final String BASE_PATH = "/home/anarbek/tmp/connect4_test/";
+  private static final Logger logger =
+      LoggerFactory.getLogger(Connect4ReinforcementLearningPipeline.class);
 
   private static String modelPath(int version) {
     return Paths.get(BASE_PATH, "models", String.format("model_v%d", version)).toString();
@@ -22,29 +26,28 @@ public class Connect4ReinforcementLearningPipeline {
   public static void main(String[] args) throws Exception {
 
     Stopwatch stopwatch = Stopwatch.createUnstarted();
-    System.out.println("Start");
+    logger.info("Start");
     stopwatch.start();
 
     long nSamples =
         ExampleGen.generate(
             ExampleGenSettings.withDefaults(
                     MonteCarloTreeSearchSettings.<Connect4>builder()
-                            .setBackPropagationStackCapacity(50)
-                            .setNodesPoolCapacity(4_000_000)
-                            .setPruneMinVisits(10)
-                            .setWriteMinVisits(500)
+                        .setBackPropagationStackCapacity(50)
+                        .setNodesPoolCapacity(4_000_000)
+                        .setPruneMinVisits(10)
+                        .setWriteMinVisits(500)
                         .setGameService(() -> Connect4Service.INSTANCE)
                         .setEvaluator(
                             () -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(7)))
                         .build())
-                    .setNumExpansions(10_000_000)
-                    .setNumThreads(5)
-                    .setNumIterations(20)
+                .setNumExpansions(10_000_000)
+                .setNumThreads(5)
+                .setNumIterations(20)
                 .setBasePath(BASE_PATH)
                 .build());
 
-    System.out.println(nSamples);
-    System.out.println(stopwatch);
+    logger.info("Wrote {} samples after {}", nSamples, stopwatch);
     int version = 0;
 
     ModelTrainerExecutor modelTrainerExecutor =
@@ -55,6 +58,6 @@ public class Connect4ReinforcementLearningPipeline {
             modelPath(version));
     modelTrainerExecutor.execute();
 
-    System.out.println("Training completed on version: " + version);
+    logger.info("Training completed on version: {} ", version);
   }
 }

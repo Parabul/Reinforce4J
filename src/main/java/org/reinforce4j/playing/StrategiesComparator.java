@@ -6,9 +6,12 @@ import org.reinforce4j.core.GameState;
 import org.reinforce4j.core.Outcomes;
 import org.reinforce4j.core.Player;
 import org.reinforce4j.utils.RandomStateGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StrategiesComparator<T extends GameState> {
 
+  private static final Logger logger = LoggerFactory.getLogger(StrategiesComparator.class);
   private final GameService<T> service;
   private final RandomStateGenerator<T> randomStateGenerator;
   private final int totalGames = 10;
@@ -28,7 +31,7 @@ public class StrategiesComparator<T extends GameState> {
     Outcomes outcomes = new Outcomes();
     Outcomes inverseOutcomes = new Outcomes();
     for (int i = 0; i < totalGames; i++) {
-      System.out.println("Round " + i + ":");
+      logger.info("Round: {}", i);
       List<Integer> randomPayout = randomStateGenerator.next();
       Player winner = simulator.playout(randomPayout);
       Player inverseWinner = inverseSimulator.playout(randomPayout);
@@ -37,8 +40,8 @@ public class StrategiesComparator<T extends GameState> {
       inverseOutcomes.addWinner(inverseWinner);
     }
 
-    System.out.println(outcomes);
-    System.out.println(inverseOutcomes);
+    logger.info("Outcomes: {}", outcomes);
+    logger.info("Inverse Outcomes: {}", inverseOutcomes);
 
     return true;
   }

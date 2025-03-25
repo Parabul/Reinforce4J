@@ -10,13 +10,17 @@ import org.reinforce4j.games.TicTacToeService;
 import org.reinforce4j.montecarlo.MonteCarloTreeSearch;
 import org.reinforce4j.montecarlo.MonteCarloTreeSearchSettings;
 import org.reinforce4j.playing.MonteCarloTreeSearchStrategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PlayWithStrategy {
+
+  private static final Logger logger = LoggerFactory.getLogger(PlayWithStrategy.class);
 
   public static void main(String[] args) {
     Scanner in = new Scanner(System.in);
 
-    System.out.println("Start");
+    logger.info("Start");
 
     MonteCarloTreeSearchSettings<TicTacToe> settings =
         MonteCarloTreeSearchSettings.withDefaults()
@@ -40,33 +44,31 @@ public class PlayWithStrategy {
 
     MonteCarloTreeSearchStrategy<TicTacToe> strategy =
         new MonteCarloTreeSearchStrategy<>(monteCarloTreeSearch);
-    System.out.println("Init complete");
+    logger.info("Init complete");
 
     TicTacToe ticTacToe = TicTacToeService.INSTANCE.newInitialState();
     List<Integer> history = new ArrayList<>();
 
-    System.out.println(ticTacToe);
+    logger.info(ticTacToe.toString());
 
     while (!ticTacToe.isGameOver()) {
-      System.out.println("Your move... ");
+      logger.info("Your move... ");
       int humanMove = in.nextInt();
       ticTacToe.move(humanMove);
       history.add(humanMove);
-      System.out.println(ticTacToe);
+      logger.info(ticTacToe.toString());
 
       if (ticTacToe.isGameOver()) {
         break;
       }
 
       int robotMove = strategy.nextMove(history);
-      System.out.println("Robot move " + robotMove);
+      logger.info("Robot move " + robotMove);
       ticTacToe.move(robotMove);
-      System.out.println(ticTacToe);
+      logger.info(ticTacToe.toString());
       history.add(robotMove);
     }
 
-    System.out.println("Winner: " + ticTacToe.getWinner());
+    logger.info("Winner: " + ticTacToe.getWinner());
   }
-
-  //    TicTacToe ticTacToe =
 }

@@ -2,12 +2,16 @@ package org.reinforce4j.playing;
 
 import java.util.List;
 import org.reinforce4j.core.GameState;
+import org.reinforce4j.learning.training.ExampleGen;
 import org.reinforce4j.montecarlo.MonteCarloTreeSearch;
 import org.reinforce4j.montecarlo.StateNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MonteCarloTreeSearchStrategy<T extends GameState> implements Strategy<T> {
 
   private static final int MIN_VISITS = 2000;
+  private static final Logger logger = LoggerFactory.getLogger(MonteCarloTreeSearchStrategy.class);
 
   private final MonteCarloTreeSearch<T> monteCarloTreeSearch;
 
@@ -37,7 +41,7 @@ public class MonteCarloTreeSearchStrategy<T extends GameState> implements Strate
           monteCarloTreeSearch.prune();
           int after = monteCarloTreeSearch.getSize();
 
-          System.out.println("Prune with " + after + "  nodes, " + before + "  nodes");
+          logger.info("Before pruning: {}, after {}", before, after);
         }
         monteCarloTreeSearch.expand(targetNode);
       }

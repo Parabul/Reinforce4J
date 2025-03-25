@@ -3,6 +3,8 @@ package org.reinforce4j.montecarlo;
 import java.util.Arrays;
 import org.apache.commons.rng.sampling.distribution.DirichletSampler;
 import org.apache.commons.rng.simple.RandomSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // Strategy that estimates values of the alternative moves using Predictive Upper Confidence Bound:
 // U(s,a) = Q(s,a) + c * P(s,a) * SQRT(N(s)) / (1+N(s,a)), where `c` is exploration weight;
@@ -10,9 +12,11 @@ import org.apache.commons.rng.simple.RandomSource;
 class NodeSelectionStrategy {
 
   // A constant that controls the balance between exploration and exploitation.
-  private static final float EXPLORATION_WEIGHT = 6;
+  private static final float EXPLORATION_WEIGHT = 4;
   // A constant that determines how much noise to add to prior win probabilities.
-  private static final float NOISE_WEIGHT = 0.15f;
+  private static final float NOISE_WEIGHT = 0.25f;
+
+  private static final Logger logger = LoggerFactory.getLogger(NodeSelectionStrategy.class);
 
   private final DirichletSampler dirichlet;
   private final int numMoves;
@@ -41,13 +45,6 @@ class NodeSelectionStrategy {
         continue;
       }
 
-      //      // Early exit if there is a winning move
-      //      if (childStates[i].getState().isGameOver()
-      //          && childStates[i].getState().getWinner().isPresent()
-      //          && childStates[i].getState().getWinner().get().equals(state.getCurrentPlayer())) {
-      //        return childStates[i];
-      //      }
-
       float prior_probability = stateNode.evaluation().getPolicy()[i];
 
       float adjusted_probability =
@@ -58,8 +55,7 @@ class NodeSelectionStrategy {
       float exploitation =
           childState.getAverageValue().getValue(stateNode.state().getCurrentPlayer());
 
-
-      float estimatedValue =  exploitation + EXPLORATION_WEIGHT * exploration;
+      float estimatedValue = exploitation + EXPLORATION_WEIGHT * exploration;
       values[i] = estimatedValue;
       if (estimatedValue > max) {
         max = estimatedValue;
@@ -67,8 +63,10 @@ class NodeSelectionStrategy {
       }
     }
     if (indexOfMax == -1) {
-      System.out.println(Arrays.toString(values));
-      System.out.println(stateNode);
+      logger.error(
+          "Could not find any child states: {} values in {}", Arrays.toString(values), stateNode);
+      throw new RuntimeException(
+          "Could not find any child states: " + Arrays.toString(values) + ", " + stateNode);
     }
 
     return indexOfMax;

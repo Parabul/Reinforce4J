@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 import org.reinforce4j.evaluation.GameOverEvaluator;
+import org.reinforce4j.evaluation.OnnxEvaluator;
 import org.reinforce4j.evaluation.TensorflowEvaluator;
 import org.reinforce4j.evaluation.ZeroValueUniformEvaluator;
 import org.reinforce4j.games.Connect4;
@@ -116,21 +117,21 @@ class StrategiesComparatorTest {
             .setEvaluator(
                 () ->
                     new GameOverEvaluator<>(
-                        new TensorflowEvaluator<>(
-                            TensorflowEvaluator.CONNECT4_V1, Connect4Service.INSTANCE)))
+                        new OnnxEvaluator<>(
+                                OnnxEvaluator.CONNECT4_V1, Connect4Service.INSTANCE)))
             .build();
 
     MonteCarloTreeSearch monteCarloTreeSearchTensorflow =
         new MonteCarloTreeSearch(settingsTensorflow);
     monteCarloTreeSearchTensorflow.init();
 
-    //    int n = 100_000;
-    //
-    //    // Warmup.
-    //    for (int i = 0; i < n; i++) {
-    //      monteCarloTreeSearchUniform.expand();
-    //      monteCarloTreeSearchTensorflow.expand();
-    //    }
+        int n = 10_000;
+
+        // Warmup.
+        for (int i = 0; i < n; i++) {
+          monteCarloTreeSearchUniform.expand();
+          monteCarloTreeSearchTensorflow.expand();
+        }
 
     MonteCarloTreeSearchStrategy<TicTacToe> strategyTwo =
         new MonteCarloTreeSearchStrategy<>(monteCarloTreeSearchTensorflow);

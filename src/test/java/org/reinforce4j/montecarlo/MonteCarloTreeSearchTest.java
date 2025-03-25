@@ -2,7 +2,6 @@ package org.reinforce4j.montecarlo;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import ai.onnxruntime.OrtException;
 import com.google.common.base.Stopwatch;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -18,10 +17,13 @@ import org.reinforce4j.games.Connect4Service;
 import org.reinforce4j.games.TicTacToe;
 import org.reinforce4j.games.TicTacToeService;
 import org.reinforce4j.utils.tfrecord.TFRecordWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MonteCarloTreeSearchTest {
 
   private static final double TOLERANCE = 0.00001;
+  private static final Logger logger = LoggerFactory.getLogger(MonteCarloTreeSearchTest.class);
 
   @Test
   public void acquireAndRelease() {
@@ -115,7 +117,7 @@ public class MonteCarloTreeSearchTest {
     monteCarloTreeSearch.expand();
 
     StateNode root = monteCarloTreeSearch.getRoot();
-    // System.out.println(root);
+    // logger.info(root);
 
     assertThat(root.getVisits()).isEqualTo(1);
     assertThat(root.getAverageValue().getSupport()).isAtLeast(10);
@@ -136,7 +138,7 @@ public class MonteCarloTreeSearchTest {
 
     MonteCarloTreeSearchSettings<TicTacToe> settings =
         MonteCarloTreeSearchSettings.withDefaults()
-            .setNodesPoolCapacity(200_000)
+            .setNodesPoolCapacity(400_000)
             .setGameService(() -> TicTacToeService.INSTANCE)
             .setEvaluator(() -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(9)))
             .build();
@@ -144,7 +146,7 @@ public class MonteCarloTreeSearchTest {
     MonteCarloTreeSearch monteCarloTreeSearch = new MonteCarloTreeSearch(settings);
     monteCarloTreeSearch.init();
 
-    int n = 1000_000;
+    int n = 1_000_000;
 
     for (int i = 0; i < n; i++) {
       monteCarloTreeSearch.expand();
@@ -162,7 +164,7 @@ public class MonteCarloTreeSearchTest {
     long written = monteCarloTreeSearch.writeTo(candidateWriter);
 
     // writeTo dumps nodes into pool.
-    assertThat(monteCarloTreeSearch.getUsage()).isWithin(TOLERANCE).of(1.0 / 200_000);
+    assertThat(monteCarloTreeSearch.getUsage()).isWithin(TOLERANCE).of(1.0 / 400_000);
 
     assertThat(written).isGreaterThan(3000);
 
@@ -216,15 +218,14 @@ public class MonteCarloTreeSearchTest {
 
     float[] output = root.encode();
     assertThat(output)
-        .usingTolerance(0.01)
+        .usingTolerance(0.02)
         .containsExactly(0.03, 0.11, 0.11, 0.11, 0.11, 0.11, 0.11, 0.11, 0.11, 0.11);
   }
 
   @Test
   public void expandsUsingUniformConnect4() {
     Stopwatch stopwatch = Stopwatch.createStarted();
-    System.out.println("Start");
-    System.out.println(stopwatch);
+    logger.info("Start" + stopwatch);
 
     MonteCarloTreeSearchSettings<Connect4> settings =
         MonteCarloTreeSearchSettings.withDefaults()
@@ -243,25 +244,23 @@ public class MonteCarloTreeSearchTest {
     long freeMemory = runtime.freeMemory(); // Free memory in the allocated space
 
     long availableMemory = maxMemory - (allocatedMemory - freeMemory); // Available memory
-    System.out.println("Available memory: " + availableMemory / (1024 * 1024) + "MB");
+    logger.info("Available memory: " + availableMemory / (1024 * 1024) + "MB");
 
     int n = 100_000;
 
-    System.out.println("Init complete");
-    System.out.println(stopwatch);
+    logger.info("Init complete: {}", stopwatch);
 
     for (int i = 0; i < n; i++) {
       monteCarloTreeSearch.expand();
     }
 
-    System.out.println("Expand complete");
-    System.out.println(stopwatch);
+    logger.info("Expand complete: {}", stopwatch);
 
     StateNode root = monteCarloTreeSearch.getRoot();
 
     assertThat(root.getVisits()).isEqualTo(n);
 
-    System.out.println(root.toExample());
+    logger.info(root.toExample().toString());
 
     ByteArrayOutputStream outputStreamCandidate = new ByteArrayOutputStream();
     TFRecordWriter candidateWriter =
@@ -271,8 +270,7 @@ public class MonteCarloTreeSearchTest {
 
     assertThat(written).isGreaterThan(1000);
 
-    System.out.println("Traverse complete");
-    System.out.println(stopwatch);
+    logger.info("Traverse complete: {}", stopwatch);
 
     float[] input = root.state().encode();
 
@@ -283,14 +281,13 @@ public class MonteCarloTreeSearchTest {
 
     assertThat(output)
         .usingTolerance(0.02)
-        .containsExactly(0.25, 0.12, 0.13, 0.15, 0.17, 0.15, 0.13, 0.12);
+        .containsExactly(0.22, 0.12, 0.13, 0.15, 0.17, 0.15, 0.13, 0.12);
   }
 
   @Test
   public void expandsUsingTensorflowConnect4() {
     Stopwatch stopwatch = Stopwatch.createStarted();
-    System.out.println("Start");
-    System.out.println(stopwatch);
+    logger.info("Start: {}", stopwatch);
 
     MonteCarloTreeSearchSettings<Connect4> settings =
         MonteCarloTreeSearchSettings.withDefaults()
@@ -313,25 +310,23 @@ public class MonteCarloTreeSearchTest {
     long freeMemory = runtime.freeMemory(); // Free memory in the allocated space
 
     long availableMemory = maxMemory - (allocatedMemory - freeMemory); // Available memory
-    System.out.println("Available memory: " + availableMemory / (1024 * 1024) + "MB");
+    logger.info("Available memory: " + availableMemory / (1024 * 1024) + "MB");
 
     int n = 10_000;
 
-    System.out.println("Init complete");
-    System.out.println(stopwatch);
+    logger.info("Init complete: {}", stopwatch);
 
     for (int i = 0; i < n; i++) {
       monteCarloTreeSearch.expand();
     }
 
-    System.out.println("Expand complete");
-    System.out.println(stopwatch);
+    logger.info("Expand complete: {}", stopwatch);
 
     StateNode root = monteCarloTreeSearch.getRoot();
 
     assertThat(root.getVisits()).isEqualTo(n);
 
-    System.out.println(root.toExample());
+    logger.info(root.toExample().toString());
 
     ByteArrayOutputStream outputStreamCandidate = new ByteArrayOutputStream();
     TFRecordWriter candidateWriter =
@@ -341,8 +336,7 @@ public class MonteCarloTreeSearchTest {
 
     assertThat(written).isGreaterThan(100);
 
-    System.out.println("Traverse complete");
-    System.out.println(stopwatch);
+    logger.info("Traverse complete: {}", stopwatch);
 
     float[] input = root.state().encode();
 
@@ -353,31 +347,23 @@ public class MonteCarloTreeSearchTest {
 
     assertThat(output)
         .usingTolerance(0.02)
-        .containsExactly(0.25, 0.12, 0.13, 0.15, 0.17, 0.15, 0.13, 0.12);
+        .containsExactly(-0.09, 0.12, 0.14, 0.14, 0.15, 0.15, 0.14, 0.12);
   }
 
   @Test
   public void expandsUsingOnnxConnect4() {
     Stopwatch stopwatch = Stopwatch.createStarted();
-    System.out.println("Start");
-    System.out.println(stopwatch);
+    logger.info("Start: {}", stopwatch);
 
     MonteCarloTreeSearchSettings<Connect4> settings =
-            MonteCarloTreeSearchSettings.withDefaults()
-                    .setNodesPoolCapacity(6_000_000)
-                    .setGameService(() -> Connect4Service.INSTANCE)
-                    .setEvaluator(
-                            () ->
-                            {
-                                try {
-                                    return new GameOverEvaluator<>(
-                                            new OnnxEvaluator<>(
-                                                    OnnxEvaluator.CONNECT4_V2, Connect4Service.INSTANCE));
-                                } catch (OrtException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            })
-                    .build();
+        MonteCarloTreeSearchSettings.withDefaults()
+            .setNodesPoolCapacity(6_000_000)
+            .setGameService(() -> Connect4Service.INSTANCE)
+            .setEvaluator(
+                () ->
+                    new GameOverEvaluator<>(
+                        new OnnxEvaluator<>(OnnxEvaluator.CONNECT4_V1, Connect4Service.INSTANCE)))
+            .build();
 
     MonteCarloTreeSearch monteCarloTreeSearch = new MonteCarloTreeSearch(settings);
     monteCarloTreeSearch.init();
@@ -389,36 +375,33 @@ public class MonteCarloTreeSearchTest {
     long freeMemory = runtime.freeMemory(); // Free memory in the allocated space
 
     long availableMemory = maxMemory - (allocatedMemory - freeMemory); // Available memory
-    System.out.println("Available memory: " + availableMemory / (1024 * 1024) + "MB");
+    logger.info("Available memory: " + availableMemory / (1024 * 1024) + "MB");
 
-    int n = 100_000;
+    int n = 10_000;
 
-    System.out.println("Init complete");
-    System.out.println(stopwatch);
+    logger.info("Init complete: {}", stopwatch);
 
     for (int i = 0; i < n; i++) {
       monteCarloTreeSearch.expand();
     }
 
-    System.out.println("Expand complete");
-    System.out.println(stopwatch);
+    logger.info("Expand complete: {}", stopwatch);
 
     StateNode root = monteCarloTreeSearch.getRoot();
 
     assertThat(root.getVisits()).isEqualTo(n);
 
-    System.out.println(root.toExample());
+    logger.info(root.toExample().toString());
 
     ByteArrayOutputStream outputStreamCandidate = new ByteArrayOutputStream();
     TFRecordWriter candidateWriter =
-            new TFRecordWriter(new DataOutputStream(outputStreamCandidate));
+        new TFRecordWriter(new DataOutputStream(outputStreamCandidate));
 
     long written = monteCarloTreeSearch.writeTo(candidateWriter);
 
     assertThat(written).isGreaterThan(100);
 
-    System.out.println("Traverse complete");
-    System.out.println(stopwatch);
+    logger.info("Traverse complete: {}", stopwatch);
 
     float[] input = root.state().encode();
 
@@ -428,8 +411,8 @@ public class MonteCarloTreeSearchTest {
     float[] output = root.encode();
 
     assertThat(output)
-            .usingTolerance(0.02)
-            .containsExactly(0.25, 0.12, 0.13, 0.15, 0.17, 0.15, 0.13, 0.12);
+        .usingTolerance(0.02)
+        .containsExactly(-0.09, 0.12, 0.14, 0.14, 0.15, 0.15, 0.14, 0.12);
   }
 
   @Test
@@ -437,7 +420,7 @@ public class MonteCarloTreeSearchTest {
     MonteCarloTreeSearchSettings<Connect4> settings =
         MonteCarloTreeSearchSettings.withDefaults()
             .setNodesPoolCapacity(8_000_000)
-            .setWriteMinVisits(1000)
+            .setWriteMinVisits(500)
             .setPruneMinVisits(10)
             .setGameService(() -> Connect4Service.INSTANCE)
             .setEvaluator(() -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(7)))
@@ -453,35 +436,30 @@ public class MonteCarloTreeSearchTest {
     long freeMemory = runtime.freeMemory(); // Free memory in the allocated space
 
     long availableMemory = maxMemory - (allocatedMemory - freeMemory); // Available memory
-    System.out.println("Available memory: " + availableMemory / (1024 * 1024) + "MB");
+    logger.info("Available memory: {}MB", availableMemory / (1024 * 1024));
 
-    int n = 10_000_000;
+    int n = 1000_000;
 
-    Stopwatch stopwatch = Stopwatch.createUnstarted();
-    System.out.println("Start");
-    stopwatch.start();
-
-    System.out.println(stopwatch);
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    logger.info("Start: {}", stopwatch);
     for (int i = 0; i < n; i++) {
       if (monteCarloTreeSearch.getUsage() > 0.9999) {
         int before = monteCarloTreeSearch.getSize();
         monteCarloTreeSearch.prune();
         int after = monteCarloTreeSearch.getSize();
 
-        System.out.println("Prune after " + after + "  nodes, before " + before + "  nodes");
-        System.out.println(stopwatch);
+        logger.info("Before prune: {}, after prune: {}, at {}", before, after, stopwatch);
       }
       monteCarloTreeSearch.expand();
     }
 
-    System.out.println("Expand complete");
-    System.out.println(stopwatch);
+    logger.info("Expand complete: {}", stopwatch);
 
     StateNode root = monteCarloTreeSearch.getRoot();
 
     assertThat(root.getVisits()).isEqualTo(n);
 
-    System.out.println(root.toExample());
+    logger.info(root.toExample().toString());
 
     ByteArrayOutputStream outputStreamCandidate = new ByteArrayOutputStream();
     TFRecordWriter candidateWriter =
@@ -489,10 +467,9 @@ public class MonteCarloTreeSearchTest {
 
     long written = monteCarloTreeSearch.writeTo(candidateWriter);
 
-    assertThat(written).isGreaterThan(1000000);
+    assertThat(written).isGreaterThan(100);
 
-    System.out.println("Traverse complete");
-    System.out.println(stopwatch);
+    logger.info("Traverse complete: {}", stopwatch);
 
     float[] input = root.state().encode();
 

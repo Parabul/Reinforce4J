@@ -8,10 +8,14 @@ import org.reinforce4j.games.Connect4;
 import org.reinforce4j.games.Connect4Service;
 import org.reinforce4j.games.TicTacToe;
 import org.reinforce4j.games.TicTacToeService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TensorflowEvaluatorTest {
 
   private static final float TOLERANCE = 0.0001f;
+  private static final Logger logger = LoggerFactory.getLogger(TensorflowEvaluatorTest.class);
+
 
   @Test
   public void shouldEvaluateCorrectly() {
@@ -36,9 +40,9 @@ public class TensorflowEvaluatorTest {
             game3, new StateEvaluation(TicTacToeService.INSTANCE.numMoves()));
 
     Stopwatch stopwatch = Stopwatch.createStarted();
-    System.out.println("Start");
+    logger.info("Start");
     tensorflowBatchEvaluator.evaluate(node1, node2, null, node3);
-    System.out.println("End: " + stopwatch.stop());
+    logger.info("End: " + stopwatch.stop());
 
     assertThat(node1.evaluation().getValue()).isWithin(TOLERANCE).of(0.3031689f);
     assertThat(node1.evaluation().getPolicy())
@@ -181,10 +185,10 @@ public class TensorflowEvaluatorTest {
             game3, new StateEvaluation(Connect4Service.INSTANCE.numMoves()));
 
     Stopwatch stopwatch = Stopwatch.createStarted();
-    System.out.println("Start");
+    logger.info("Start");
     tensorflowBatchEvaluator.evaluate(node1, null, node3);
     tensorflowBatchEvaluator.evaluate(node2, null);
-    System.out.println("End: " + stopwatch.stop());
+    logger.info("End: " + stopwatch.stop());
 
     assertThat(node1.evaluation().getValue()).isWithin(TOLERANCE).of(0.21751882f);
     assertThat(node1.evaluation().getPolicy())

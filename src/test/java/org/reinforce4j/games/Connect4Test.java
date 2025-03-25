@@ -76,7 +76,14 @@ class Connect4Test {
 
     game.move(3);
     game.move(3);
-    assertThat(game.encode()).usingTolerance(0.0001).containsExactly(new float[] {0, 0, 0, 0});
+    assertThat(game.encode())
+        .usingTolerance(0.0001)
+        .containsExactly(
+            new float[] {
+              0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+              0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+              0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f
+            });
   }
 
   @Test

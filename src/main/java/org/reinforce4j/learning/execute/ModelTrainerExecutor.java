@@ -6,9 +6,13 @@ import java.io.IOException;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.Executor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Supplies inputs to and executes a Python script that is expected to output a model. */
 public class ModelTrainerExecutor {
+
+  private static final Logger logger = LoggerFactory.getLogger(ModelTrainerExecutor.class);
 
   private final String workingDirectory;
   private final String script;
@@ -45,7 +49,7 @@ public class ModelTrainerExecutor {
 
   public int execute() throws IOException {
     CommandLine cmdLine = getCommandLine();
-    System.out.println(cmdLine.toString());
+    logger.info(cmdLine.toString());
     Executor executor = getExecutor();
     return executor.execute(cmdLine);
   }

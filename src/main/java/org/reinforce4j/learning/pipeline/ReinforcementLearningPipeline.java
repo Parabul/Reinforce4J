@@ -10,10 +10,13 @@ import org.reinforce4j.learning.execute.ModelTrainerExecutor;
 import org.reinforce4j.learning.training.ExampleGen;
 import org.reinforce4j.learning.training.ExampleGenSettings;
 import org.reinforce4j.montecarlo.MonteCarloTreeSearchSettings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ReinforcementLearningPipeline {
 
   private static final String BASE_PATH = "/home/anarbek/tmp/pipeline_test/";
+  private static final Logger logger = LoggerFactory.getLogger(ReinforcementLearningPipeline.class);
 
   private static String modelPath(int version) {
     return Paths.get(BASE_PATH, "models", String.format("model_v%d", version)).toString();
@@ -22,7 +25,7 @@ public class ReinforcementLearningPipeline {
   public static void main(String[] args) throws Exception {
 
     Stopwatch stopwatch = Stopwatch.createUnstarted();
-    System.out.println("Start");
+    logger.info("Start");
     stopwatch.start();
 
     long nSamples =
@@ -36,8 +39,7 @@ public class ReinforcementLearningPipeline {
                 .setBasePath(BASE_PATH)
                 .build());
 
-    System.out.println(nSamples);
-    System.out.println(stopwatch);
+    logger.info("Wrote {} samples after {}", nSamples, stopwatch);
     int version = 0;
 
     ModelTrainerExecutor modelTrainerExecutor =
