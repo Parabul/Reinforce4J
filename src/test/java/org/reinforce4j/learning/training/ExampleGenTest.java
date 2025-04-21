@@ -90,13 +90,13 @@ public class ExampleGenTest {
             ExampleGenSettings.withDefaults(
                     MonteCarloTreeSearchSettings.withDefaults()
                         .setGameService(() -> Connect4Service.INSTANCE)
-                        .setNodesPoolCapacity(1_000_000)
+                        .setNodesPoolCapacity(8_000_000)
                         .setEvaluator(
                             () -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(7)))
                         .build())
                 .setBasePath("/not/used")
                 .setNumIterations(2)
-                .setNumExpansions(10000)
+                .setNumExpansions(100_000)
                 .build());
     long numRecords = dataGenerator.call();
     assertThat(numRecords).isGreaterThan(100);

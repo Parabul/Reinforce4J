@@ -99,7 +99,7 @@ class StrategiesComparatorTest {
 
     MonteCarloTreeSearchSettings<Connect4> settingsUniform =
         MonteCarloTreeSearchSettings.withDefaults()
-            .setNodesPoolCapacity(3_000_000)
+            .setNodesPoolCapacity(4_000_000)
             .setGameService(() -> Connect4Service.INSTANCE)
             .setEvaluator(() -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(7)))
             .build();
@@ -110,9 +110,9 @@ class StrategiesComparatorTest {
     Strategy<TicTacToe> strategyOne =
         new MonteCarloTreeSearchStrategy<>(monteCarloTreeSearchUniform);
 
-    MonteCarloTreeSearchSettings<Connect4> settingsTensorflow =
+    MonteCarloTreeSearchSettings<Connect4> settingsOnnx =
         MonteCarloTreeSearchSettings.withDefaults()
-            .setNodesPoolCapacity(3_000_000)
+            .setNodesPoolCapacity(4_000_000)
             .setGameService(() -> Connect4Service.INSTANCE)
             .setEvaluator(
                 () ->
@@ -121,20 +121,20 @@ class StrategiesComparatorTest {
                                 OnnxEvaluator.CONNECT4_V1, Connect4Service.INSTANCE)))
             .build();
 
-    MonteCarloTreeSearch monteCarloTreeSearchTensorflow =
-        new MonteCarloTreeSearch(settingsTensorflow);
-    monteCarloTreeSearchTensorflow.init();
+    MonteCarloTreeSearch monteCarloTreeSearchOnnx =
+        new MonteCarloTreeSearch(settingsOnnx);
+    monteCarloTreeSearchOnnx.init();
 
         int n = 10_000;
 
         // Warmup.
         for (int i = 0; i < n; i++) {
           monteCarloTreeSearchUniform.expand();
-          monteCarloTreeSearchTensorflow.expand();
+          monteCarloTreeSearchOnnx.expand();
         }
 
     MonteCarloTreeSearchStrategy<TicTacToe> strategyTwo =
-        new MonteCarloTreeSearchStrategy<>(monteCarloTreeSearchTensorflow);
+        new MonteCarloTreeSearchStrategy<>(monteCarloTreeSearchOnnx);
 
     strategiesComparator.candidateIsBetter(strategyOne, strategyTwo);
   }

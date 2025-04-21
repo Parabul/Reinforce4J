@@ -41,9 +41,9 @@ public class Connect4ReinforcementLearningPipeline {
                         .setEvaluator(
                             () -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(7)))
                         .build())
-                .setNumExpansions(10_000_000)
+                .setNumExpansions(3_000_000)
                 .setNumThreads(5)
-                .setNumIterations(20)
+                .setNumIterations(100)
                 .setBasePath(BASE_PATH)
                 .build());
 

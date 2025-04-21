@@ -1,8 +1,7 @@
 package org.reinforce4j.playing;
 
-import org.reinforce4j.core.GameState;
-
 import java.util.List;
+import org.reinforce4j.core.GameState;
 
 public interface Strategy<T extends GameState> {
 

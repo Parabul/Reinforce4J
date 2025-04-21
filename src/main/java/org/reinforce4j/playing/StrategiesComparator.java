@@ -32,9 +32,9 @@ public class StrategiesComparator<T extends GameState> {
     Outcomes inverseOutcomes = new Outcomes();
     for (int i = 0; i < totalGames; i++) {
       logger.info("Round: {}", i);
-      List<Integer> randomPayout = randomStateGenerator.next();
-      Player winner = simulator.playout(randomPayout);
-      Player inverseWinner = inverseSimulator.playout(randomPayout);
+      List<Integer> randomPlayout = randomStateGenerator.next();
+      Player winner = simulator.playout(randomPlayout);
+      Player inverseWinner = inverseSimulator.playout(randomPlayout);
 
       outcomes.addWinner(winner);
       inverseOutcomes.addWinner(inverseWinner);
@@ -43,6 +43,11 @@ public class StrategiesComparator<T extends GameState> {
     logger.info("Outcomes: {}", outcomes);
     logger.info("Inverse Outcomes: {}", inverseOutcomes);
 
-    return true;
+    double metric =
+        (outcomes.valueFor(Player.ONE) + inverseOutcomes.valueFor(Player.TWO))
+            - (outcomes.valueFor(Player.TWO) + inverseOutcomes.valueFor(Player.ONE));
+
+    logger.info("Metric: {}", metric);
+    return metric < 0.0;
   }
 }

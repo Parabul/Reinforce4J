@@ -20,9 +20,7 @@ public class TensorflowEvaluator<T extends GameState> implements Evaluator<T> {
       TensorflowEvaluator.class.getResource("/tensorflow/models/tic_tac_toe_v3/").getPath();
 
   public static final String CONNECT4_V1 =
-          TensorflowEvaluator.class.getResource("/tensorflow/models/connect4/v1/").getPath();
-
-
+      TensorflowEvaluator.class.getResource("/tensorflow/models/connect4/v1/").getPath();
 
   private static final String SERVE_TAG = "serve";
   private static final String FUNCTION_NAME = "serving_default";

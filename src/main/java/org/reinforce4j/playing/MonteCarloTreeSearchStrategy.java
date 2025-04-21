@@ -2,7 +2,6 @@ package org.reinforce4j.playing;
 
 import java.util.List;
 import org.reinforce4j.core.GameState;
-import org.reinforce4j.learning.training.ExampleGen;
 import org.reinforce4j.montecarlo.MonteCarloTreeSearch;
 import org.reinforce4j.montecarlo.StateNode;
 import org.slf4j.Logger;
@@ -10,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 public class MonteCarloTreeSearchStrategy<T extends GameState> implements Strategy<T> {
 
-  private static final int MIN_VISITS = 2000;
+  private static final int MIN_VISITS = 1600;
   private static final Logger logger = LoggerFactory.getLogger(MonteCarloTreeSearchStrategy.class);
 
   private final MonteCarloTreeSearch<T> monteCarloTreeSearch;

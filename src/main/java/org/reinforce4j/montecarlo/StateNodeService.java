@@ -26,6 +26,4 @@ public class StateNodeService<T extends GameState> {
     this.gameService = gameService;
     this.evaluator = evaluator;
   }
-
-
 }
