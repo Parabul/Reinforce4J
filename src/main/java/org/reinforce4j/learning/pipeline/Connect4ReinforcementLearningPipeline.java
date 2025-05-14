@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 public class Connect4ReinforcementLearningPipeline {
 
-  private static final String BASE_PATH = "/home/anarbek/tmp/connect4_test/";
+  private static final String BASE_PATH = "/tmp/connect4_test/";
   private static final Logger logger =
       LoggerFactory.getLogger(Connect4ReinforcementLearningPipeline.class);
 

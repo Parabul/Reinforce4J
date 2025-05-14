@@ -18,11 +18,11 @@ class ModelTrainerExecutorTest {
         new ModelTrainerExecutor(
             tempDir.toString(),
             getClass().getClassLoader().getResource("test_args.py").getPath(),
-            "/home/anarbek/tmp",
-            "/home/anarbek/tmp/model");
+            "//tmp",
+            "//tmp/model");
 
     assertThat(ImmutableList.copyOf(executor.getCommandLine().toStrings()))
-        .containsAtLeast("-i", "-o", "/home/anarbek/tmp", "/home/anarbek/tmp/model");
+        .containsAtLeast("-i", "-o", "//tmp", "//tmp/model");
   }
 
   @Test
@@ -31,8 +31,8 @@ class ModelTrainerExecutorTest {
         new ModelTrainerExecutor(
             tempDir.toString(),
             getClass().getClassLoader().getResource("test_args.py").getPath(),
-            "/home/anarbek/tmp",
-            "/home/anarbek/tmp/model");
+            "//tmp",
+            "//tmp/model");
     assertThat(executor.execute()).isEqualTo(0);
   }
 }

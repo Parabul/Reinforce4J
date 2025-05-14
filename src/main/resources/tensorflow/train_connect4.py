@@ -5,8 +5,8 @@ from tensorflow.keras import layers, models, optimizers, callbacks, regularizers
 
 # Parse command line arguments (optional)
 parser = argparse.ArgumentParser()
-parser.add_argument("-i", "--input", help="Training dataset input pattern", default="/home/anarbek/tmp/connect4_test/training-*.tfrecord")
-parser.add_argument("-o", "--output", help="Model output path", default="/home/anarbek/tmp/connect4_test/model_v3/")
+parser.add_argument("-i", "--input", help="Training dataset input pattern", default="/tmp/connect4_test/training-*.tfrecord")
+parser.add_argument("-o", "--output", help="Model output path", default="/tmp/connect4_test/model_v3/")
 args = parser.parse_args()
 
 input_path = args.input

@@ -139,7 +139,7 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
       sum += outputs[move + 1];
     }
 
-    // TODO(anarbek): Revisit. Check how to handle states all zero values moves.
+    // TODO: Revisit. Check how to handle states with all zero values moves.
     for (int move = 0; move < childStates.length; move++) {
       outputs[move + 1] = outputs[move + 1] / sum;
     }
