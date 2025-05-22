@@ -1,13 +1,15 @@
 package org.reinforce4j.playing;
 
 import java.util.List;
-import java.util.Random;
+import org.apache.commons.rng.UniformRandomProvider;
+import org.apache.commons.rng.simple.RandomSource;
 import org.reinforce4j.core.GameService;
 import org.reinforce4j.core.GameState;
 
-public class RandomStrategy<T extends GameState> implements Strategy<T> {
+public class RandomStrategy<T extends GameState>
+    implements HistoryBasedStrategy<T>, StateBasedStrategy<T> {
 
-  private final Random random = new Random();
+  private final UniformRandomProvider random = RandomSource.XO_RO_SHI_RO_128_PP.create();
   private final int[] allowedMoves;
   private final GameService<T> gameService;
 
@@ -31,6 +33,20 @@ public class RandomStrategy<T extends GameState> implements Strategy<T> {
     int numAllowedMoves = 0;
     for (int i = 0; i < gameService.numMoves(); i++) {
       if (targetState.isMoveAllowed(i)) {
+        allowedMoves[numAllowedMoves++] = i;
+      }
+    }
+
+    int option = random.nextInt(numAllowedMoves);
+
+    return allowedMoves[option];
+  }
+
+  @Override
+  public int nextMove(T state) {
+    int numAllowedMoves = 0;
+    for (int i = 0; i < gameService.numMoves(); i++) {
+      if (state.isMoveAllowed(i)) {
         allowedMoves[numAllowedMoves++] = i;
       }
     }

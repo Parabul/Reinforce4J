@@ -53,8 +53,8 @@ public class OnnxEvaluator<T extends GameState> implements Evaluator<T> {
         System.arraycopy(nodes[i].state().encode(), 0, batch, i * numFeatures, numFeatures);
       }
 
-      try (OrtSession.Result results =
-          session.run(ImmutableMap.of(INPUT, OnnxTensor.createTensor(env, buffer, shape)))) {
+      try (OnnxTensor inputTensor = OnnxTensor.createTensor(env, buffer, shape);
+          OrtSession.Result results = session.run(ImmutableMap.of(INPUT, inputTensor))) {
 
         float[][] value = (float[][]) results.get(VALUE_OUTPUT).get().getValue();
         float[][] policy = (float[][]) results.get(POLICY_OUTPUT).get().getValue();

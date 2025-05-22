@@ -1,7 +1,5 @@
 package org.reinforce4j.playing;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.Test;
 import org.reinforce4j.evaluation.GameOverEvaluator;
 import org.reinforce4j.evaluation.OnnxEvaluator;
@@ -21,7 +19,7 @@ class StrategiesComparatorTest {
 
     StrategiesComparator strategiesComparator = new StrategiesComparator(TicTacToeService.INSTANCE);
 
-    Strategy<TicTacToe> strategyOne = new RandomStrategy<>(TicTacToeService.INSTANCE);
+    HistoryBasedStrategy<TicTacToe> strategyOne = new RandomStrategy<>(TicTacToeService.INSTANCE);
 
     MonteCarloTreeSearchSettings<TicTacToe> settings =
         MonteCarloTreeSearchSettings.withDefaults()
@@ -60,7 +58,7 @@ class StrategiesComparatorTest {
     MonteCarloTreeSearch monteCarloTreeSearchUniform = new MonteCarloTreeSearch(settingsUniform);
     monteCarloTreeSearchUniform.init();
 
-    Strategy<TicTacToe> strategyOne =
+    HistoryBasedStrategy<TicTacToe> strategyOne =
         new MonteCarloTreeSearchStrategy<>(monteCarloTreeSearchUniform);
 
     MonteCarloTreeSearchSettings<TicTacToe> settingsTensorflow =
@@ -107,7 +105,7 @@ class StrategiesComparatorTest {
     MonteCarloTreeSearch monteCarloTreeSearchUniform = new MonteCarloTreeSearch(settingsUniform);
     monteCarloTreeSearchUniform.init();
 
-    Strategy<TicTacToe> strategyOne =
+    HistoryBasedStrategy<TicTacToe> strategyOne =
         new MonteCarloTreeSearchStrategy<>(monteCarloTreeSearchUniform);
 
     MonteCarloTreeSearchSettings<Connect4> settingsOnnx =

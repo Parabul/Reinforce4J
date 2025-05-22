@@ -5,7 +5,7 @@ import java.util.Arrays;
 import org.reinforce4j.core.*;
 import org.reinforce4j.evaluation.GameStateAndEvaluation;
 import org.reinforce4j.evaluation.StateEvaluation;
-import org.reinforce4j.utils.TensorFlowUtils;
+import org.reinforce4j.utils.tfrecord.TensorFlowUtils;
 import org.tensorflow.example.Example;
 
 @SuppressWarnings("unchecked")

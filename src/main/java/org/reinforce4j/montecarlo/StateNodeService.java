@@ -4,9 +4,6 @@ import java.util.*;
 import org.reinforce4j.core.GameService;
 import org.reinforce4j.core.GameState;
 import org.reinforce4j.evaluation.Evaluator;
-import org.reinforce4j.utils.TensorFlowUtils;
-import org.reinforce4j.utils.tfrecord.TFRecordWriter;
-import org.tensorflow.example.Example;
 
 @SuppressWarnings("unchecked")
 public class StateNodeService<T extends GameState> {

@@ -1,4 +1,4 @@
-package org.reinforce4j.utils;
+package org.reinforce4j.utils.tfrecord;
 
 import org.tensorflow.example.Example;
 import org.tensorflow.example.Feature;

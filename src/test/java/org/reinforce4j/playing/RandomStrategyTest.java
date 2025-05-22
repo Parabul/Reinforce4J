@@ -1,7 +1,5 @@
 package org.reinforce4j.playing;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
 import org.junit.jupiter.api.Test;
@@ -12,7 +10,7 @@ class RandomStrategyTest {
 
   @Test
   void nextMoveFromRootUniform() {
-    Strategy<TicTacToe> strategy = new RandomStrategy<>(TicTacToeService.INSTANCE);
+    HistoryBasedStrategy<TicTacToe> strategy = new RandomStrategy<>(TicTacToeService.INSTANCE);
 
     int n = 1000_000;
     int[] moves = new int[9];
@@ -32,7 +30,7 @@ class RandomStrategyTest {
 
   @Test
   void allowedMovesOnly() {
-    Strategy<TicTacToe> strategy = new RandomStrategy<>(TicTacToeService.INSTANCE);
+    HistoryBasedStrategy<TicTacToe> strategy = new RandomStrategy<>(TicTacToeService.INSTANCE);
 
     int n = 1000_000;
     int[] moves = new int[9];

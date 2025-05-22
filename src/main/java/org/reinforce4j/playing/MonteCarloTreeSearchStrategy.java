@@ -7,7 +7,7 @@ import org.reinforce4j.montecarlo.StateNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MonteCarloTreeSearchStrategy<T extends GameState> implements Strategy<T> {
+public class MonteCarloTreeSearchStrategy<T extends GameState> implements HistoryBasedStrategy<T> {
 
   private static final int MIN_VISITS = 1600;
   private static final Logger logger = LoggerFactory.getLogger(MonteCarloTreeSearchStrategy.class);
