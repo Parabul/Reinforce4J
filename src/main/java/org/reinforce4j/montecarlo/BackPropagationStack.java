@@ -3,7 +3,6 @@ package org.reinforce4j.montecarlo;
 import com.google.common.base.Preconditions;
 import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
-import org.reinforce4j.core.Player;
 
 class BackPropagationStack {
 
@@ -45,9 +44,9 @@ class BackPropagationStack {
     return pointer >= 0;
   }
 
-  public AverageValue acquire(Player player, double value) {
+  public AverageValue acquire() {
     try {
-      return valuesPool.pop().set(player, value);
+      return valuesPool.pop().reset();
     } catch (NoSuchElementException e) {
       throw new RuntimeException("Failed to acquire, with size of : " + valuesPool.size(), e);
     }

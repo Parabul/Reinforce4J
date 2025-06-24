@@ -45,13 +45,13 @@ class NodeSelectionStrategy {
         continue;
       }
 
-      float prior_probability = stateNode.evaluation().getPolicy()[i];
+      float priorProbability = stateNode.evaluation().getPolicy()[i];
 
-      float adjusted_probability =
-          (float) (prior_probability * (1 - NOISE_WEIGHT) + NOISE_WEIGHT * noises[i]);
+      float adjustedProbability =
+          (float) (priorProbability * (1 - NOISE_WEIGHT) + NOISE_WEIGHT * noises[i]);
 
       float exploration =
-          (float) (adjusted_probability * parentVisitsSqrt / (1 + childState.getVisits()));
+          (float) (adjustedProbability * parentVisitsSqrt / (1 + childState.getVisits()));
       float exploitation =
           childState.getAverageValue().getValue(stateNode.state().getCurrentPlayer());
 

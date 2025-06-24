@@ -12,10 +12,6 @@ import org.tensorflow.example.Example;
 // Wrapper around game state that represents a single node in the Monte Carlo Search Tree.
 public class StateNode<T extends GameState> implements GameStateAndEvaluation<T> {
 
-  // Since the output could be all zeros (when all moves result in loss), we add small epsilon for
-  // each output to keep numerical operations safe.
-  private static final float EPSILON = 1E-6f;
-
   // Array of child state, has size `num_moves`. Unreachable states (moves not allowed) are
   // populated with zeros.
   private final StateNode<T>[] childStates;
@@ -97,7 +93,7 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
     return !initialized || state.isGameOver();
   }
 
-  public long getVisits() {
+  public int getVisits() {
     return outcomes.getTotalOutcomes();
   }
 
@@ -113,12 +109,6 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
         .add("averageValue", averageValue)
         .add("outcomes", outcomes)
         .add("initialized", initialized)
-        //            .add(
-        //                    "childStates",
-        //                    Arrays.stream(childStates)
-        //                            .filter(ch -> ch != null)
-        //                            .map(ch -> ch.outcomes)
-        //                            .collect(Collectors.toList()))
         .toString();
   }
 
@@ -128,20 +118,19 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
       throw new IllegalStateException("Leaf node can not be encoded");
     }
 
-    outputs[0] = outcomes.valueFor(state.getCurrentPlayer());
-    float sum = 0;
+    outputs[0] = averageValue.getValue(state.getCurrentPlayer());
+    float totalVisits = 0;
     for (int move = 0; move < childStates.length; move++) {
       if (childStates[move] == null) {
         continue;
       }
 
-      outputs[move + 1] = childStates[move].outcomes.winRateFor(state.getCurrentPlayer()) + EPSILON;
-      sum += outputs[move + 1];
+      outputs[move + 1] = childStates[move].getVisits();
+      totalVisits += outputs[move + 1];
     }
 
-    // TODO: Revisit. Check how to handle states with all zero values moves.
     for (int move = 0; move < childStates.length; move++) {
-      outputs[move + 1] = outputs[move + 1] / sum;
+      outputs[move + 1] = outputs[move + 1] / totalVisits;
     }
 
     return outputs;

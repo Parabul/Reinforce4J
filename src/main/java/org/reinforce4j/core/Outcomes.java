@@ -6,9 +6,9 @@ import com.google.common.base.Objects;
 /** Game outcomes */
 public class Outcomes {
 
-  private long firstPlayerWins;
-  private long secondPlayerWins;
-  private long ties;
+  private int firstPlayerWins;
+  private int secondPlayerWins;
+  private int ties;
 
   public Outcomes() {
     firstPlayerWins = 0;
@@ -23,7 +23,7 @@ public class Outcomes {
   }
 
   public float valueFor(Player player) {
-    long total = getTotalOutcomes();
+    int total = getTotalOutcomes();
     if (total == 0) {
       return 0.0f;
     }
@@ -35,7 +35,7 @@ public class Outcomes {
   }
 
   public float winRateFor(Player player) {
-    long total = getTotalOutcomes();
+    int total = getTotalOutcomes();
     if (total == 0L) {
       return 0.0f;
     }
@@ -62,7 +62,7 @@ public class Outcomes {
     }
   }
 
-  public long getTotalOutcomes() {
+  public int getTotalOutcomes() {
     return firstPlayerWins + secondPlayerWins + ties;
   }
 

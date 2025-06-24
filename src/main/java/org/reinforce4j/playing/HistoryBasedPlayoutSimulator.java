@@ -16,7 +16,9 @@ public class HistoryBasedPlayoutSimulator<T extends GameState> {
   private final GameService<T> service;
 
   public HistoryBasedPlayoutSimulator(
-          HistoryBasedStrategy<T> playerOneStrategy, HistoryBasedStrategy<T> playerTwoStrategy, final GameService service) {
+      HistoryBasedStrategy<T> playerOneStrategy,
+      HistoryBasedStrategy<T> playerTwoStrategy,
+      final GameService service) {
     this.strategies =
         new EnumMap<>(
             ImmutableMap.of(Player.ONE, playerOneStrategy, Player.TWO, playerTwoStrategy));

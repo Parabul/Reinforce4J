@@ -20,13 +20,15 @@ public class GameOverEvaluator<T extends GameState> implements Evaluator<T> {
         continue;
       }
 
-      if (!envelope.state().isGameOver()) {
+      GameState state = envelope.state();
+
+      if (!state.isGameOver()) {
         continue;
       }
 
-      if (envelope.state().getWinner().equals(envelope.state().getCurrentPlayer())) {
+      if (state.getWinner().equals(state.getCurrentPlayer())) {
         envelope.evaluation().setValue(1);
-      } else if (envelope.state().getWinner().equals(Player.NONE)) {
+      } else if (state.getWinner().equals(Player.NONE)) {
         envelope.evaluation().setValue(0);
       } else {
         envelope.evaluation().setValue(-1);

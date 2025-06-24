@@ -15,23 +15,27 @@ public class AverageValueTest {
 
   @Test
   public void negativeValueForTheOpponent() {
-    AverageValue averageValue = new AverageValue(1, Player.ONE);
+    AverageValue averageValue = new AverageValue(1, 1);
     Truth.assertThat(averageValue.getValue(Player.ONE)).isEqualTo(1.0f);
     Truth.assertThat(averageValue.getValue(Player.TWO)).isEqualTo(-1.0f);
   }
 
   @Test
-  public void addingZeroValueUpdatesAverage() {
-    AverageValue averageValue = new AverageValue(1, Player.ONE);
-    averageValue.add(new AverageValue(0, Player.ONE));
-    Truth.assertThat(averageValue.getValue(Player.ONE)).isEqualTo(0.5f);
-    Truth.assertThat(averageValue.getValue(Player.TWO)).isEqualTo(-0.5f);
+  public void addWinners() {
+    AverageValue averageValue = new AverageValue(2, 2);
+    averageValue.addWinner(Player.ONE);
+    averageValue.addWinner(Player.TWO);
+    averageValue.addWinner(Player.NONE);
+    AverageValue averageValueExpected = new AverageValue(2, 5);
+    Truth.assertThat(averageValue).isEqualTo(averageValueExpected);
+    Truth.assertThat(averageValue.getValue(Player.ONE)).isEqualTo(0.4f);
+    Truth.assertThat(averageValue.getValue(Player.TWO)).isEqualTo(-0.4f);
   }
 
   @Test
   public void addingOppositeValueReturnsZero() {
-    AverageValue averageValue = new AverageValue(1, Player.ONE);
-    averageValue.add(new AverageValue(1, Player.TWO));
+    AverageValue averageValue = new AverageValue(1, 1);
+    averageValue.addWinner(Player.TWO);
     Truth.assertThat(averageValue.getValue(Player.ONE)).isEqualTo(0.0f);
     Truth.assertThat(averageValue.getValue(Player.TWO)).isEqualTo(-0.0f);
   }

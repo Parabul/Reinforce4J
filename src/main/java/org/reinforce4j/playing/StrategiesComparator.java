@@ -24,9 +24,11 @@ public class StrategiesComparator<T extends GameState> {
   // Returns true when a candidate strategy outperforms the incumbent.
   public boolean candidateIsBetter(HistoryBasedStrategy incumbent, HistoryBasedStrategy candidate) {
 
-    HistoryBasedPlayoutSimulator simulator = new HistoryBasedPlayoutSimulator(incumbent, candidate, service);
+    HistoryBasedPlayoutSimulator simulator =
+        new HistoryBasedPlayoutSimulator(incumbent, candidate, service);
 
-    HistoryBasedPlayoutSimulator inverseSimulator = new HistoryBasedPlayoutSimulator(candidate, incumbent, service);
+    HistoryBasedPlayoutSimulator inverseSimulator =
+        new HistoryBasedPlayoutSimulator(candidate, incumbent, service);
 
     Outcomes outcomes = new Outcomes();
     Outcomes inverseOutcomes = new Outcomes();

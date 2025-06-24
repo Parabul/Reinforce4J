@@ -9,10 +9,13 @@ import org.reinforce4j.core.GameState;
 public class OnnxEvaluator<T extends GameState> implements Evaluator<T> {
 
   public static final String CONNECT4_V1 =
-      TensorflowEvaluator.class.getResource("/onnx/models/model.onnx").getPath();
+      TensorflowEvaluator.class.getResource("/onnx/models/connect4_v0.onnx").getPath();
 
   public static final String CONNECT4_V2 =
-      TensorflowEvaluator.class.getResource("/onnx/models/opt_model.onnx").getPath();
+      TensorflowEvaluator.class.getResource("/onnx/models/connect4_v1.onnx").getPath();
+
+  public static final String CONNECT4_ALT_V0 =
+      TensorflowEvaluator.class.getResource("/onnx/models/connect4_alt_v0.onnx").getPath();
 
   private static final String INPUT = "input_1";
   private static final String VALUE_OUTPUT = "value_output";

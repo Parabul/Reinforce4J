@@ -51,8 +51,9 @@ public class MonteCarloTreeSearch<T extends GameState> {
     // Game Over: a leaf should have a winner.
     Player winner = currentNode.state().getWinner();
 
+    AverageValue accumulatedValue = new AverageValue();
     // Draw has no value, otherwise 1 to the winner.
-    AverageValue accumulatedValue = backPropagationStack.acquire(winner, 1);
+    accumulatedValue.addWinner(winner);
 
     // Update leaf node
     currentNode.update(winner, accumulatedValue);
@@ -63,11 +64,12 @@ public class MonteCarloTreeSearch<T extends GameState> {
         accumulatedValue.add(backPropagationStack.getAverageValue());
         backPropagationStack.release(backPropagationStack.getAverageValue());
       }
+      // Update parents
       backPropagationStack.getStateNode().update(winner, accumulatedValue);
       backPropagationStack.next();
     } while (backPropagationStack.hasNext());
 
-    backPropagationStack.release(accumulatedValue);
+    //    backPropagationStack.release(accumulatedValue);
   }
 
   public void init() {
@@ -99,7 +101,7 @@ public class MonteCarloTreeSearch<T extends GameState> {
 
     evaluator.evaluate(stateNode.getChildStates());
 
-    AverageValue averageValue = backPropagationStack.acquire(Player.ONE, 0);
+    AverageValue childrenAverageValue = backPropagationStack.acquire();
     for (int move = 0; move < gameService.numMoves(); move++) {
       if (!stateNode.state().isMoveAllowed(move)) {
         continue;
@@ -107,11 +109,11 @@ public class MonteCarloTreeSearch<T extends GameState> {
       StateNode<T> childNode = stateNode.getChildStates()[move];
       childNode
           .getAverageValue()
-          .set(childNode.state().getCurrentPlayer(), childNode.evaluation().getValue());
-      averageValue.add(childNode.state().getCurrentPlayer(), childNode.evaluation().getValue());
+          .fromEvaluation(childNode.state().getCurrentPlayer(), childNode.evaluation().getValue());
+      childrenAverageValue.add(childNode.getAverageValue());
     }
 
-    return Optional.of(averageValue);
+    return Optional.of(childrenAverageValue);
   }
 
   // Traverses the tree from root and dumps all nodes back into pool, optionally writes nodes into

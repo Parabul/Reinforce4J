@@ -1,9 +1,7 @@
 package org.reinforce4j.playing;
 
 import com.google.common.collect.ImmutableMap;
-import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.List;
 import org.reinforce4j.core.GameService;
 import org.reinforce4j.core.GameState;
 import org.reinforce4j.core.Player;

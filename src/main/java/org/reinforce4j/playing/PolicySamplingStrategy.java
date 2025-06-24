@@ -1,8 +1,5 @@
 package org.reinforce4j.playing;
 
-import java.util.ArrayList;
-import java.util.List;
-import org.apache.commons.math3.util.Pair;
 import org.apache.commons.rng.UniformRandomProvider;
 import org.apache.commons.rng.sampling.CompositeSamplers;
 import org.apache.commons.rng.simple.RandomSource;

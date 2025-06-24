@@ -3,7 +3,6 @@ package org.reinforce4j.montecarlo;
 import static com.google.common.truth.Truth.assertThat;
 
 import org.junit.jupiter.api.Test;
-import org.reinforce4j.core.Player;
 import org.reinforce4j.evaluation.GameOverEvaluator;
 import org.reinforce4j.evaluation.ZeroValueUniformEvaluator;
 import org.reinforce4j.games.TicTacToe;
@@ -32,10 +31,12 @@ class NodeSelectionStrategyTest {
 
     int[] histogram = new int[n];
 
-    int times = 1000_000;
+    int times = 1_000_000;
     for (int i = 0; i < times; i++) {
       histogram[nodeSelectionStrategy.suggestMove(root)]++;
     }
+
+    //    System.out.println(nodeSelectionStrategy.suggestMoveAndExplain(root).getValue());
 
     float[] dist = new float[n];
 
@@ -69,7 +70,7 @@ class NodeSelectionStrategyTest {
     NodeSelectionStrategy nodeSelectionStrategy = new NodeSelectionStrategy(numMoves);
 
     // Move 5 has some value
-    stateNode.getChildStates()[4].getAverageValue().add(new AverageValue(0.2f, Player.ONE));
+    stateNode.getChildStates()[4].getAverageValue().add(new AverageValue(0.2f, 1));
 
     int[] histogram = new int[numMoves];
 
@@ -130,7 +131,16 @@ class NodeSelectionStrategyTest {
 
     assertThat(dist)
         .usingTolerance(0.01)
-        .containsExactly(0.77, 0.028, 0.028, 0.028, 0.028, 0.028, 0.028, 0.028, 0.028)
+        .containsExactly(0.77, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02)
         .inOrder();
   }
+
+  //  @Test
+  //  public void dirichletSampler(){
+  //    DirichletSampler dirichlet =
+  //            DirichletSampler.symmetric(RandomSource.XO_RO_SHI_RO_128_PP.create(), 2, 0.15);
+  //    for(int i = 0; i < 100; i++){
+  //      System.out.println(Arrays.toString(dirichlet.sample()));
+  //    }
+  //  }
 }

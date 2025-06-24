@@ -22,6 +22,44 @@ public class Connect4ReinforcementLearningPipeline {
   private static final Logger logger =
       LoggerFactory.getLogger(Connect4ReinforcementLearningPipeline.class);
 
+  private static void train() throws IOException, ExecutionException, InterruptedException {
+
+    Stopwatch stopwatch = Stopwatch.createUnstarted();
+    logger.info("Start");
+    stopwatch.start();
+
+    long nSamples =
+        ExampleGen.generate(
+            ExampleGenSettings.withDefaults(
+                    MonteCarloTreeSearchSettings.<Connect4>builder()
+                        .setBackPropagationStackCapacity(50)
+                        .setNodesPoolCapacity(8_000_000)
+                        .setPruneMinVisits(10)
+                        .setWriteMinVisits(100)
+                        .setGameService(() -> Connect4Service.INSTANCE)
+                        .setEvaluator(
+                            () -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(7)))
+                        .build())
+                .setNumExpansions(3_000_000)
+                .setNumThreads(10)
+                .setNumIterations(50)
+                .setBasePath(BASE_PATH)
+                .build());
+
+    logger.info("Wrote {} samples after {}", nSamples, stopwatch);
+    int version = 0;
+
+    ModelTrainerExecutor modelTrainerExecutor =
+        new ModelTrainerExecutor(
+            BASE_PATH,
+            ClassLoader.getSystemResource("tensorflow/train_connect4.py").getPath(),
+            Paths.get(BASE_PATH, "training-*.tfrecord").toString(),
+            modelPath(version));
+    modelTrainerExecutor.execute();
+
+    logger.info("Training completed on version: {} ", version);
+  }
+
   private static void retrain() throws IOException, ExecutionException, InterruptedException {
 
     Stopwatch stopwatch = Stopwatch.createUnstarted();
@@ -33,19 +71,19 @@ public class Connect4ReinforcementLearningPipeline {
             ExampleGenSettings.withDefaults(
                     MonteCarloTreeSearchSettings.<Connect4>builder()
                         .setBackPropagationStackCapacity(50)
-                        .setNodesPoolCapacity(3_000_000)
+                        .setNodesPoolCapacity(8_000_000)
                         .setPruneMinVisits(10)
-                        .setWriteMinVisits(500)
+                        .setWriteMinVisits(100)
                         .setGameService(() -> Connect4Service.INSTANCE)
                         .setEvaluator(
                             () ->
                                 new GameOverEvaluator<>(
                                     new OnnxEvaluator<>(
-                                        OnnxEvaluator.CONNECT4_V1, Connect4Service.INSTANCE)))
+                                        OnnxEvaluator.CONNECT4_ALT_V0, Connect4Service.INSTANCE)))
                         .build())
-                .setNumExpansions(300_000)
-                .setNumThreads(3)
-                .setNumIterations(100)
+                .setNumExpansions(3_000_000)
+                .setNumThreads(10)
+                .setNumIterations(10)
                 .setBasePath(BASE_PATH)
                 .build());
 
@@ -68,40 +106,6 @@ public class Connect4ReinforcementLearningPipeline {
   }
 
   public static void main(String[] args) throws Exception {
-
-    Stopwatch stopwatch = Stopwatch.createUnstarted();
-    logger.info("Start");
-    stopwatch.start();
-
-    long nSamples =
-        ExampleGen.generate(
-            ExampleGenSettings.withDefaults(
-                    MonteCarloTreeSearchSettings.<Connect4>builder()
-                        .setBackPropagationStackCapacity(50)
-                        .setNodesPoolCapacity(4_000_000)
-                        .setPruneMinVisits(10)
-                        .setWriteMinVisits(500)
-                        .setGameService(() -> Connect4Service.INSTANCE)
-                        .setEvaluator(
-                            () -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(7)))
-                        .build())
-                .setNumExpansions(3_000_000)
-                .setNumThreads(5)
-                .setNumIterations(100)
-                .setBasePath(BASE_PATH)
-                .build());
-
-    logger.info("Wrote {} samples after {}", nSamples, stopwatch);
-    int version = 0;
-
-    ModelTrainerExecutor modelTrainerExecutor =
-        new ModelTrainerExecutor(
-            BASE_PATH,
-            ClassLoader.getSystemResource("tensorflow/train_connect4.py").getPath(),
-            Paths.get(BASE_PATH, "training-*.tfrecord").toString(),
-            modelPath(version));
-    modelTrainerExecutor.execute();
-
-    logger.info("Training completed on version: {} ", version);
+    retrain();
   }
 }
