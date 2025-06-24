@@ -30,13 +30,13 @@ public class TensorflowEvaluatorTest {
     game3.move(1);
 
     GameStateAndEvaluation<TicTacToe> node1 =
-        GameStateAndEvaluationImpl.create(
+        GameStateAndEvaluationEnvelope.create(
             game1, new StateEvaluation(TicTacToeService.INSTANCE.numMoves()));
     GameStateAndEvaluation<TicTacToe> node2 =
-        GameStateAndEvaluationImpl.create(
+        GameStateAndEvaluationEnvelope.create(
             game2, new StateEvaluation(TicTacToeService.INSTANCE.numMoves()));
     GameStateAndEvaluation<TicTacToe> node3 =
-        GameStateAndEvaluationImpl.create(
+        GameStateAndEvaluationEnvelope.create(
             game3, new StateEvaluation(TicTacToeService.INSTANCE.numMoves()));
 
     Stopwatch stopwatch = Stopwatch.createStarted();
@@ -96,7 +96,7 @@ public class TensorflowEvaluatorTest {
     TicTacToe root = service.newInitialState();
     StateEvaluation evaluation = new StateEvaluation(service.numMoves());
 
-    GameStateAndEvaluation envelope = GameStateAndEvaluationImpl.create(root, evaluation);
+    GameStateAndEvaluation envelope = GameStateAndEvaluationEnvelope.create(root, evaluation);
 
     TensorflowEvaluator tensorflowBatchEvaluator =
         new TensorflowEvaluator(TensorflowEvaluator.TIC_TAC_TOE_V1, service);
@@ -131,8 +131,8 @@ public class TensorflowEvaluatorTest {
     StateEvaluation evaluationOne = new StateEvaluation(service.numMoves());
     StateEvaluation evaluationTwo = new StateEvaluation(service.numMoves());
 
-    GameStateAndEvaluation envelopeOne = GameStateAndEvaluationImpl.create(stateOne, evaluationOne);
-    GameStateAndEvaluation envelopeTwo = GameStateAndEvaluationImpl.create(stateTwo, evaluationTwo);
+    GameStateAndEvaluation envelopeOne = GameStateAndEvaluationEnvelope.create(stateOne, evaluationOne);
+    GameStateAndEvaluation envelopeTwo = GameStateAndEvaluationEnvelope.create(stateTwo, evaluationTwo);
 
     TensorflowEvaluator tensorflowBatchEvaluator =
         new TensorflowEvaluator(TensorflowEvaluator.TIC_TAC_TOE_V1, service);
@@ -175,13 +175,13 @@ public class TensorflowEvaluatorTest {
     game3.move(1);
 
     GameStateAndEvaluation<Connect4> node1 =
-        GameStateAndEvaluationImpl.create(
+        GameStateAndEvaluationEnvelope.create(
             game1, new StateEvaluation(Connect4Service.INSTANCE.numMoves()));
     GameStateAndEvaluation<Connect4> node2 =
-        GameStateAndEvaluationImpl.create(
+        GameStateAndEvaluationEnvelope.create(
             game2, new StateEvaluation(Connect4Service.INSTANCE.numMoves()));
-    GameStateAndEvaluationImpl<Connect4> node3 =
-        GameStateAndEvaluationImpl.create(
+    GameStateAndEvaluationEnvelope<Connect4> node3 =
+        GameStateAndEvaluationEnvelope.create(
             game3, new StateEvaluation(Connect4Service.INSTANCE.numMoves()));
 
     Stopwatch stopwatch = Stopwatch.createStarted();

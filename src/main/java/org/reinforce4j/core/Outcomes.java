@@ -16,12 +16,6 @@ public class Outcomes {
     ties = 0;
   }
 
-  public void copy(Outcomes other) {
-    firstPlayerWins = other.firstPlayerWins;
-    secondPlayerWins = other.secondPlayerWins;
-    ties = other.ties;
-  }
-
   public float valueFor(Player player) {
     int total = getTotalOutcomes();
     if (total == 0) {

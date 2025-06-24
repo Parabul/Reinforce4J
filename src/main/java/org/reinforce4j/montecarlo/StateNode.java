@@ -63,19 +63,6 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
     return childStates;
   }
 
-  public StateNode<T> copy(StateNode<T> other) {
-    this.state.copy(other.state);
-    this.initialized = other.initialized;
-
-    System.arraycopy(other.childStates, 0, this.childStates, 0, this.childStates.length);
-
-    this.evaluation.copy(other.evaluation);
-    this.averageValue.copy(other.averageValue);
-    this.outcomes.copy(other.outcomes);
-
-    return this;
-  }
-
   public void update(Player winner, AverageValue averageValue) {
     this.outcomes.addWinner(winner);
     this.averageValue.add(averageValue);

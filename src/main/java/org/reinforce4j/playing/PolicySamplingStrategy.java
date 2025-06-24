@@ -6,7 +6,7 @@ import org.apache.commons.rng.simple.RandomSource;
 import org.reinforce4j.core.GameService;
 import org.reinforce4j.core.GameState;
 import org.reinforce4j.evaluation.Evaluator;
-import org.reinforce4j.evaluation.GameStateAndEvaluationImpl;
+import org.reinforce4j.evaluation.GameStateAndEvaluationEnvelope;
 import org.reinforce4j.evaluation.StateEvaluation;
 
 /** Strategy that leverages the policy vector in the state evaluation to sample. */
@@ -27,8 +27,8 @@ public class PolicySamplingStrategy<T extends GameState> implements StateBasedSt
 
   @Override
   public int nextMove(T state) {
-    GameStateAndEvaluationImpl envelope =
-        GameStateAndEvaluationImpl.create(state, new StateEvaluation(gameService.numMoves()));
+    GameStateAndEvaluationEnvelope envelope =
+        GameStateAndEvaluationEnvelope.create(state, new StateEvaluation(gameService.numMoves()));
     evaluator.evaluate(envelope);
 
     for (int i = 0; i < gameService.numMoves(); i++) {

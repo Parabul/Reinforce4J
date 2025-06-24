@@ -17,11 +17,6 @@ public class StateEvaluation {
     policy = new float[numMoves];
   }
 
-  public void copy(StateEvaluation other) {
-    this.value = other.value;
-    System.arraycopy(other.policy, 0, this.policy, 0, other.policy.length);
-  }
-
   public float getValue() {
     return value;
   }

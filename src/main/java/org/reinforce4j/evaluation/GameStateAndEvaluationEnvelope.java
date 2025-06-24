@@ -4,12 +4,12 @@ import com.google.auto.value.AutoValue;
 import org.reinforce4j.core.GameState;
 
 @AutoValue
-public abstract class GameStateAndEvaluationImpl<T extends GameState>
+public abstract class GameStateAndEvaluationEnvelope<T extends GameState>
     implements GameStateAndEvaluation<T> {
 
-  public static <T extends GameState> GameStateAndEvaluationImpl<T> create(
+  public static <T extends GameState> GameStateAndEvaluationEnvelope<T> create(
       T state, StateEvaluation evaluation) {
-    return new AutoValue_GameStateAndEvaluationImpl(state, evaluation);
+    return new AutoValue_GameStateAndEvaluationEnvelope(state, evaluation);
   }
 
   @Override

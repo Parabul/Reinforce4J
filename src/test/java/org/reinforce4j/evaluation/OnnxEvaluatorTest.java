@@ -33,13 +33,13 @@ class OnnxEvaluatorTest {
     game3.move(1);
 
     GameStateAndEvaluation<Connect4> node1 =
-        GameStateAndEvaluationImpl.create(
+        GameStateAndEvaluationEnvelope.create(
             game1, new StateEvaluation(Connect4Service.INSTANCE.numMoves()));
     GameStateAndEvaluation<Connect4> node2 =
-        GameStateAndEvaluationImpl.create(
+        GameStateAndEvaluationEnvelope.create(
             game2, new StateEvaluation(Connect4Service.INSTANCE.numMoves()));
-    GameStateAndEvaluationImpl<Connect4> node3 =
-        GameStateAndEvaluationImpl.create(
+    GameStateAndEvaluationEnvelope<Connect4> node3 =
+        GameStateAndEvaluationEnvelope.create(
             game3, new StateEvaluation(Connect4Service.INSTANCE.numMoves()));
 
     Stopwatch stopwatch = Stopwatch.createStarted();

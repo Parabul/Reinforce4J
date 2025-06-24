@@ -16,7 +16,7 @@ class ZeroValueUniformEvaluatorTest {
     TicTacToe root = service.newInitialState();
     StateEvaluation evaluation = new StateEvaluation(service.numMoves());
 
-    GameStateAndEvaluation envelope = GameStateAndEvaluationImpl.create(root, evaluation);
+    GameStateAndEvaluation envelope = GameStateAndEvaluationEnvelope.create(root, evaluation);
 
     ZeroValueUniformEvaluator evaluator = new ZeroValueUniformEvaluator(service.numMoves());
     evaluator.evaluate(envelope);
@@ -35,7 +35,7 @@ class ZeroValueUniformEvaluatorTest {
     root.move(4);
     StateEvaluation evaluation = new StateEvaluation(service.numMoves());
 
-    GameStateAndEvaluation envelope = GameStateAndEvaluationImpl.create(root, evaluation);
+    GameStateAndEvaluation envelope = GameStateAndEvaluationEnvelope.create(root, evaluation);
 
     ZeroValueUniformEvaluator evaluator = new ZeroValueUniformEvaluator(service.numMoves());
     evaluator.evaluate(envelope);

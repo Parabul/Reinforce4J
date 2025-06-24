@@ -49,11 +49,6 @@ public class AverageValue {
     return this;
   }
 
-  public void copy(final AverageValue other) {
-    this.playerOneValue = other.playerOneValue;
-    this.support = other.support;
-  }
-
   public AverageValue add(final AverageValue other) {
     this.playerOneValue += other.playerOneValue;
     this.support += other.support;
