@@ -5,13 +5,13 @@ import static com.google.common.truth.Truth.assertThat;
 import ai.onnxruntime.OrtException;
 import com.google.common.base.Stopwatch;
 import org.junit.jupiter.api.Test;
+import org.reinforce4j.constants.NumberOfFeatures;
+import org.reinforce4j.constants.NumberOfMoves;
 import org.reinforce4j.games.Connect4;
-import org.reinforce4j.games.Connect4Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class OnnxEvaluatorTest {
-
 
   private static final Logger logger = LoggerFactory.getLogger(OnnxEvaluatorTest.class);
 
@@ -19,28 +19,18 @@ class OnnxEvaluatorTest {
 
   @Test
   public void shouldEvaluateCorrectlyConnect4() throws OrtException {
-    OnnxEvaluator<Connect4> evaluator =
-        new OnnxEvaluator<>(OnnxEvaluator.CONNECT4_V1, Connect4Service.INSTANCE);
+    OnnxEvaluator evaluator =
+        new OnnxEvaluator(
+            OnnxEvaluator.CONNECT4_V1, new NumberOfFeatures(42), new NumberOfMoves(7));
 
-    Connect4 game1 = Connect4Service.INSTANCE.newInitialState();
-    Connect4 game2 = Connect4Service.INSTANCE.newInitialState();
-    game2.move(3);
-    Connect4 game3 = Connect4Service.INSTANCE.newInitialState();
-    game3.move(3);
-    game3.move(3);
-    game3.move(2);
-    game3.move(3);
-    game3.move(1);
+    Connect4 game1 = new Connect4();
+    Connect4 game2 = game1.move(3);
+    Connect4 game3 = game2.move(3).move(2).move(3).move(1);
 
-    GameStateAndEvaluation<Connect4> node1 =
-        GameStateAndEvaluationEnvelope.create(
-            game1, new StateEvaluation(Connect4Service.INSTANCE.numMoves()));
-    GameStateAndEvaluation<Connect4> node2 =
-        GameStateAndEvaluationEnvelope.create(
-            game2, new StateEvaluation(Connect4Service.INSTANCE.numMoves()));
-    GameStateAndEvaluationEnvelope<Connect4> node3 =
-        GameStateAndEvaluationEnvelope.create(
-            game3, new StateEvaluation(Connect4Service.INSTANCE.numMoves()));
+    EvaluatedGameState node1 = EvaluatedGameStateEnvelope.create(game1, new StateEvaluation(7));
+    EvaluatedGameState node2 = EvaluatedGameStateEnvelope.create(game2, new StateEvaluation(7));
+    EvaluatedGameStateEnvelope node3 =
+        EvaluatedGameStateEnvelope.create(game3, new StateEvaluation(7));
 
     Stopwatch stopwatch = Stopwatch.createStarted();
     logger.info("Start");

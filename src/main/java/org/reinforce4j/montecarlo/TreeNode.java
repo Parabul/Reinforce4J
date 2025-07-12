@@ -1,36 +1,33 @@
 package org.reinforce4j.montecarlo;
 
 import com.google.common.base.MoreObjects;
-import java.util.Arrays;
 import org.reinforce4j.core.*;
-import org.reinforce4j.evaluation.GameStateAndEvaluation;
+import org.reinforce4j.evaluation.EvaluatedGameState;
 import org.reinforce4j.evaluation.StateEvaluation;
 import org.reinforce4j.utils.tfrecord.TensorFlowUtils;
 import org.tensorflow.example.Example;
 
-@SuppressWarnings("unchecked")
 // Wrapper around game state that represents a single node in the Monte Carlo Search Tree.
-public class StateNode<T extends GameState> implements GameStateAndEvaluation<T> {
+public class TreeNode implements EvaluatedGameState {
+
+  private final GameState state;
+  private final StateEvaluation evaluation;
 
   // Array of child state, has size `num_moves`. Unreachable states (moves not allowed) are
   // populated with zeros.
-  private final StateNode<T>[] childStates;
-  private final T state;
+  private final TreeNode[] childStates;
 
-  private final StateEvaluation evaluation;
-  // Observations:
   // Total value of all nodes reached through this node.
   private final AverageValue averageValue;
-  // Unique identification for object pooling.
   // Outcomes observed:
   private final Outcomes outcomes;
   // True when visited and not pruned.
   private boolean initialized = false;
 
-  public StateNode(T initialState, int numMoves) {
-    this.state = initialState;
+  public TreeNode(GameState state, int numMoves) {
+    this.state = state;
     this.evaluation = new StateEvaluation(numMoves);
-    this.childStates = new StateNode[numMoves];
+    this.childStates = new TreeNode[numMoves];
     this.averageValue = new AverageValue();
     this.outcomes = new Outcomes();
   }
@@ -40,27 +37,21 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
     return evaluation;
   }
 
+  @Override
+  public GameState state() {
+    return state;
+  }
+
+  public TreeNode[] getChildStates() {
+    return childStates;
+  }
+
   public Outcomes getOutcomes() {
     return outcomes;
   }
 
-  @Override
-  public T state() {
-    return state;
-  }
-
-  public StateNode<T> initializeWith(T state) {
-    this.state.copy(state);
-    evaluation.reset();
-    averageValue.reset();
-    outcomes.reset();
-    this.initialized = false;
-    Arrays.fill(childStates, null);
-    return this;
-  }
-
-  public StateNode<T>[] getChildStates() {
-    return childStates;
+  public AverageValue getAverageValue() {
+    return averageValue;
   }
 
   public void update(Player winner, AverageValue averageValue) {
@@ -82,10 +73,6 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
 
   public int getVisits() {
     return outcomes.getTotalOutcomes();
-  }
-
-  public AverageValue getAverageValue() {
-    return averageValue;
   }
 
   @Override
@@ -114,6 +101,9 @@ public class StateNode<T extends GameState> implements GameStateAndEvaluation<T>
 
       outputs[move + 1] = childStates[move].getVisits();
       totalVisits += outputs[move + 1];
+    }
+    if (totalVisits == 0) {
+      throw new IllegalStateException("No visits found for " + this);
     }
 
     for (int move = 0; move < childStates.length; move++) {

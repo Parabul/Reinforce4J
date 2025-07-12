@@ -1,20 +1,29 @@
 package org.reinforce4j.learning.pipeline;
 
 import com.google.common.base.Stopwatch;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
+import org.reinforce4j.constants.NumberOfFeatures;
+import org.reinforce4j.constants.NumberOfMoves;
 import org.reinforce4j.evaluation.GameOverEvaluator;
 import org.reinforce4j.evaluation.OnnxEvaluator;
 import org.reinforce4j.evaluation.ZeroValueUniformEvaluator;
 import org.reinforce4j.games.Connect4;
-import org.reinforce4j.games.Connect4Service;
 import org.reinforce4j.learning.execute.ModelTrainerExecutor;
-import org.reinforce4j.learning.training.ExampleGen;
-import org.reinforce4j.learning.training.ExampleGenSettings;
 import org.reinforce4j.montecarlo.MonteCarloTreeSearchSettings;
+import org.reinforce4j.montecarlo.TreeNode;
+import org.reinforce4j.montecarlo.MonteCarloTreeSearchModule;
+import org.reinforce4j.montecarlo.TreeSearch;
+import org.reinforce4j.utils.tfrecord.TFRecordWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tensorflow.example.Example;
 
 public class Connect4ReinforcementLearningPipeline {
 
@@ -22,31 +31,32 @@ public class Connect4ReinforcementLearningPipeline {
   private static final Logger logger =
       LoggerFactory.getLogger(Connect4ReinforcementLearningPipeline.class);
 
-  private static void train() throws IOException, ExecutionException, InterruptedException {
+  private static void train() throws IOException, InterruptedException {
 
     Stopwatch stopwatch = Stopwatch.createUnstarted();
     logger.info("Start");
     stopwatch.start();
 
-    long nSamples =
-        ExampleGen.generate(
-            ExampleGenSettings.withDefaults(
-                    MonteCarloTreeSearchSettings.<Connect4>builder()
-                        .setBackPropagationStackCapacity(50)
-                        .setNodesPoolCapacity(8_000_000)
-                        .setPruneMinVisits(10)
-                        .setWriteMinVisits(100)
-                        .setGameService(() -> Connect4Service.INSTANCE)
-                        .setEvaluator(
-                            () -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(7)))
-                        .build())
-                .setNumExpansions(3_000_000)
-                .setNumThreads(10)
-                .setNumIterations(50)
-                .setBasePath(BASE_PATH)
-                .build());
+    for (int i = 1; i < 5; i++) {
+      Injector injector =
+          Guice.createInjector(
+              new MonteCarloTreeSearchModule(
+                  MonteCarloTreeSearchSettings.builder()
+                      .setPruneMinVisits(10)
+                      .setWriteMinVisits(1000)
+                      .setEvaluator(() -> new GameOverEvaluator(new ZeroValueUniformEvaluator(7)))
+                      .build()));
+      TreeSearch treeSearch = injector.getInstance(TreeSearch.class);
+      TreeNode root = new TreeNode(new Connect4(), 7);
+      List<Example> examples = treeSearch.explore(root);
 
-    logger.info("Wrote {} samples after {}", nSamples, stopwatch);
+      DataOutputStream outputStream =
+          new DataOutputStream(new FileOutputStream(BASE_PATH + "training-" + i + ".tfrecord"));
+      TFRecordWriter writer = new TFRecordWriter(outputStream);
+      writer.writeAll(examples);
+      outputStream.close();
+    }
+
     int version = 0;
 
     ModelTrainerExecutor modelTrainerExecutor =
@@ -66,28 +76,33 @@ public class Connect4ReinforcementLearningPipeline {
     logger.info("Start");
     stopwatch.start();
 
-    long nSamples =
-        ExampleGen.generate(
-            ExampleGenSettings.withDefaults(
-                    MonteCarloTreeSearchSettings.<Connect4>builder()
-                        .setBackPropagationStackCapacity(50)
-                        .setNodesPoolCapacity(8_000_000)
-                        .setPruneMinVisits(10)
-                        .setWriteMinVisits(100)
-                        .setGameService(() -> Connect4Service.INSTANCE)
-                        .setEvaluator(
-                            () ->
-                                new GameOverEvaluator<>(
-                                    new OnnxEvaluator<>(
-                                        OnnxEvaluator.CONNECT4_ALT_V0, Connect4Service.INSTANCE)))
-                        .build())
-                .setNumExpansions(3_000_000)
-                .setNumThreads(10)
-                .setNumIterations(10)
-                .setBasePath(BASE_PATH)
-                .build());
+    for (int i = 1; i < 5; i++) {
 
-    logger.info("Wrote {} samples after {}", nSamples, stopwatch);
+      Injector injector =
+          Guice.createInjector(
+              new MonteCarloTreeSearchModule(
+                  MonteCarloTreeSearchSettings.builder()
+                      .setPruneMinVisits(10)
+                      .setWriteMinVisits(1000)
+                      .setEvaluator(
+                          () ->
+                              new GameOverEvaluator(
+                                  new OnnxEvaluator(
+                                      OnnxEvaluator.CONNECT4_V0,
+                                      new NumberOfFeatures(42),
+                                      new NumberOfMoves(7))))
+                      .build()));
+      TreeSearch treeSearch = injector.getInstance(TreeSearch.class);
+      TreeNode root = new TreeNode(new Connect4(), 7);
+      List<Example> examples = treeSearch.explore(root);
+
+      DataOutputStream outputStream =
+          new DataOutputStream(new FileOutputStream(BASE_PATH + "training-" + i + ".tfrecord"));
+      TFRecordWriter writer = new TFRecordWriter(outputStream);
+      writer.writeAll(examples);
+      outputStream.close();
+    }
+
     int version = 0;
 
     ModelTrainerExecutor modelTrainerExecutor =
@@ -106,6 +121,6 @@ public class Connect4ReinforcementLearningPipeline {
   }
 
   public static void main(String[] args) throws Exception {
-    retrain();
+    train();
   }
 }

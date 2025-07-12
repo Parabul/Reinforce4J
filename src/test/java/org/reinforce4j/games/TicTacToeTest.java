@@ -9,7 +9,7 @@ public class TicTacToeTest {
 
   @Test
   public void expectedInitialState() {
-    TicTacToe root = TicTacToeService.INSTANCE.newInitialState();
+    TicTacToe root = new TicTacToe();
 
     assertThat(root.isGameOver()).isFalse();
     assertThat(root.getCurrentPlayer()).isEqualTo(Player.ONE);
@@ -21,61 +21,45 @@ public class TicTacToeTest {
 
   @Test
   public void isNotAllowedSameMove() {
-    TicTacToe root = TicTacToeService.INSTANCE.newInitialState();
+    TicTacToe root = new TicTacToe();
 
     assertThat(root.isMoveAllowed(5)).isTrue();
-    root.move(5);
+    root = root.move(5);
     assertThat(root.isMoveAllowed(5)).isFalse();
   }
 
   @Test
   public void detectsGameOver() {
-    TicTacToe root = TicTacToeService.INSTANCE.newInitialState();
+    TicTacToe root = new TicTacToe();
 
-    root.move(0);
+    root = root.move(0);
     assertThat(root.isGameOver()).isFalse();
-    root.move(3);
+    root = root.move(3);
     assertThat(root.isGameOver()).isFalse();
-    root.move(1);
+    root = root.move(1);
     assertThat(root.isGameOver()).isFalse();
-    root.move(4);
+    root = root.move(4);
     assertThat(root.isGameOver()).isFalse();
-    root.move(2);
+    root = root.move(2);
     assertThat(root.isGameOver()).isTrue();
     assertThat(root.getWinner()).isEqualTo(Player.ONE);
   }
 
   @Test
   public void testEquals() {
-    TicTacToe alpha = TicTacToeService.INSTANCE.newInitialState();
-    TicTacToe beta = TicTacToeService.INSTANCE.newInitialState();
+    TicTacToe alpha = new TicTacToe();
+    TicTacToe beta = new TicTacToe();
     assertThat(alpha).isEqualTo(beta);
 
-    alpha.move(1);
-    alpha.move(2);
+    alpha = alpha.move(1);
+    alpha = alpha.move(2);
 
-    beta.move(3);
-    beta.move(2);
+    beta = beta.move(3);
+    beta = beta.move(2);
     assertThat(alpha).isNotEqualTo(beta);
 
-    alpha.move(3);
-    beta.move(1);
+    alpha = alpha.move(3);
+    beta = beta.move(1);
     assertThat(alpha).isEqualTo(beta);
-  }
-
-  @Test
-  public void copiesStates() {
-    TicTacToe from = TicTacToeService.INSTANCE.newInitialState();
-    from.move(1);
-    from.move(5);
-
-    TicTacToe to = TicTacToeService.INSTANCE.newInitialState();
-    assertThat(to).isNotEqualTo(from);
-
-    to.copy(from);
-    assertThat(to).isEqualTo(from);
-
-    from.move(3);
-    assertThat(to).isNotEqualTo(from);
   }
 }

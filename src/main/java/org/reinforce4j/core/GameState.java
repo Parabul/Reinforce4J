@@ -1,7 +1,7 @@
 package org.reinforce4j.core;
 
 /** Core game state abstraction. */
-public interface GameState<T extends GameState> {
+public interface GameState {
 
   Player getCurrentPlayer();
 
@@ -12,11 +12,8 @@ public interface GameState<T extends GameState> {
   // Returns NULL if game is not over, returns Player.NONE for games ended in draw (tie).
   Player getWinner();
 
-  // Mutates the state.
-  void move(int move);
+  GameState move(int move);
 
-  // Copies internal state from the other.
-  void copy(T other);
-
+  // TODO(anarbek): Move to Encoder interface
   float[] encode();
 }

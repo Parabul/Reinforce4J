@@ -2,7 +2,7 @@ package org.reinforce4j.playing;
 
 import org.reinforce4j.core.GameState;
 
-public interface StateBasedStrategy<T extends GameState> {
+public interface StateBasedStrategy {
 
-  int nextMove(T state);
+  int nextMove(GameState state);
 }

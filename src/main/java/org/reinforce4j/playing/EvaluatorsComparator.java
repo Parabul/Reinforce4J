@@ -1,6 +1,7 @@
 package org.reinforce4j.playing;
 
-import org.reinforce4j.core.GameService;
+import java.util.function.Supplier;
+import org.reinforce4j.constants.NumberOfMoves;
 import org.reinforce4j.core.GameState;
 import org.reinforce4j.core.Outcomes;
 import org.reinforce4j.core.Player;
@@ -8,14 +9,23 @@ import org.reinforce4j.evaluation.Evaluator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EvaluatorsComparator<T extends GameState> {
+public class EvaluatorsComparator {
 
   private static final Logger logger = LoggerFactory.getLogger(EvaluatorsComparator.class);
-  private final GameService<T> service;
-  private final int totalGames = 10000;
+  private final int totalGames;
+  private final NumberOfMoves numberOfMoves;
+  private final Supplier<GameState> initialStateSupplier;
 
-  public EvaluatorsComparator(GameService<T> service) {
-    this.service = service;
+  public EvaluatorsComparator(
+      NumberOfMoves numberOfMoves, Supplier<GameState> initialStateSupplier) {
+    this(numberOfMoves, initialStateSupplier, 10000);
+  }
+
+  public EvaluatorsComparator(
+      NumberOfMoves numberOfMoves, Supplier<GameState> initialStateSupplier, int totalGames) {
+    this.numberOfMoves = numberOfMoves;
+    this.initialStateSupplier = initialStateSupplier;
+    this.totalGames = totalGames;
   }
 
   /** 99% confidence interval */
@@ -24,16 +34,16 @@ public class EvaluatorsComparator<T extends GameState> {
   }
 
   // Returns true when a candidate strategy outperforms the incumbent.
-  public boolean candidateIsBetter(Evaluator<T> incumbent, Evaluator<T> candidate) {
-    PolicySamplingStrategy incumbentStrategy = new PolicySamplingStrategy(service, incumbent);
+  public boolean candidateIsBetter(Evaluator incumbent, Evaluator candidate) {
+    PolicySamplingStrategy incumbentStrategy = new PolicySamplingStrategy(numberOfMoves, incumbent);
 
-    PolicySamplingStrategy candidateStrategy = new PolicySamplingStrategy(service, candidate);
+    PolicySamplingStrategy candidateStrategy = new PolicySamplingStrategy(numberOfMoves, candidate);
 
-    StateBasedPlayoutSimulator simulator =
-        new StateBasedPlayoutSimulator(incumbentStrategy, candidateStrategy, service);
+    PlayOutSimulator simulator =
+        new PlayOutSimulator(incumbentStrategy, candidateStrategy, initialStateSupplier);
 
-    StateBasedPlayoutSimulator inverseSimulator =
-        new StateBasedPlayoutSimulator(candidateStrategy, incumbentStrategy, service);
+    PlayOutSimulator inverseSimulator =
+        new PlayOutSimulator(candidateStrategy, incumbentStrategy, initialStateSupplier);
 
     Outcomes outcomes = new Outcomes();
     Outcomes inverseOutcomes = new Outcomes();
@@ -42,8 +52,8 @@ public class EvaluatorsComparator<T extends GameState> {
         logger.info("Round: {}", i);
       }
 
-      outcomes.addWinner(simulator.playout());
-      inverseOutcomes.addWinner(inverseSimulator.playout());
+      outcomes.addWinner(simulator.playOut());
+      inverseOutcomes.addWinner(inverseSimulator.playOut());
     }
 
     logger.info("Outcomes: {}", outcomes);

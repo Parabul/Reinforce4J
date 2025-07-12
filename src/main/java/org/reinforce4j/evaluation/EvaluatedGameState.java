@@ -2,9 +2,9 @@ package org.reinforce4j.evaluation;
 
 import org.reinforce4j.core.GameState;
 
-public interface GameStateAndEvaluation<T extends GameState> {
+public interface EvaluatedGameState {
 
-  T state();
+  GameState state();
 
   StateEvaluation evaluation();
 }

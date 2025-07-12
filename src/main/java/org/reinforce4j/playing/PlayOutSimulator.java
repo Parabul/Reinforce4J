@@ -2,27 +2,29 @@ package org.reinforce4j.playing;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.EnumMap;
-import org.reinforce4j.core.GameService;
+import java.util.function.Supplier;
 import org.reinforce4j.core.GameState;
 import org.reinforce4j.core.Player;
 
-public class StateBasedPlayoutSimulator<T extends GameState> {
+public class PlayOutSimulator {
 
   private static final int MAX_MOVES = 500;
 
-  private final EnumMap<Player, StateBasedStrategy<T>> strategies;
-  private final GameService<T> service;
+  private final EnumMap<Player, StateBasedStrategy> strategies;
+  private final Supplier<GameState> initialStateSupplier;
 
-  public StateBasedPlayoutSimulator(
-          StateBasedStrategy<T> playerOneStrategy, StateBasedStrategy<T> playerTwoStrategy, final GameService service) {
+  public PlayOutSimulator(
+      StateBasedStrategy playerOneStrategy,
+      StateBasedStrategy playerTwoStrategy,
+      Supplier<GameState> initialStateSupplier) {
     this.strategies =
         new EnumMap<>(
             ImmutableMap.of(Player.ONE, playerOneStrategy, Player.TWO, playerTwoStrategy));
-    this.service = service;
+    this.initialStateSupplier = initialStateSupplier;
   }
 
-  public Player playout() {
-    T state = service.newInitialState();
+  public Player playOut() {
+    GameState state = initialStateSupplier.get();
 
     int moves = 0;
     while (!state.isGameOver()) {
@@ -30,8 +32,8 @@ public class StateBasedPlayoutSimulator<T extends GameState> {
       if (!state.isMoveAllowed(move)) {
         throw new IllegalArgumentException("Move not allowed: " + move + " in " + state);
       }
-      state.move(move);
-      if (moves++> MAX_MOVES) {
+      state = state.move(move);
+      if (moves++ > MAX_MOVES) {
         throw new IllegalStateException("Too many moves");
       }
     }

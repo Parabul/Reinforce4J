@@ -6,26 +6,14 @@ import com.google.common.base.Objects;
 /** Game outcomes */
 public class Outcomes {
 
-  private int firstPlayerWins;
-  private int secondPlayerWins;
+  private int first;
+  private int second;
   private int ties;
 
   public Outcomes() {
-    firstPlayerWins = 0;
-    secondPlayerWins = 0;
+    first = 0;
+    second = 0;
     ties = 0;
-  }
-
-  public float valueFor(Player player) {
-    int total = getTotalOutcomes();
-    if (total == 0) {
-      return 0.0f;
-    }
-    if (Player.ONE.equals(player)) {
-      return 1.0f * (firstPlayerWins - secondPlayerWins) / total;
-    } else {
-      return 1.0f * (secondPlayerWins - firstPlayerWins) / total;
-    }
   }
 
   public float winRateFor(Player player) {
@@ -35,9 +23,9 @@ public class Outcomes {
     }
     switch (player) {
       case ONE:
-        return (1.0f * firstPlayerWins + 0.5f * ties) / total;
+        return (1.0f * first + 0.5f * ties) / total;
       case TWO:
-        return (1.0f * secondPlayerWins + 0.5f * ties) / total;
+        return (1.0f * second + 0.5f * ties) / total;
       default:
         return 1.0f * ties / total;
     }
@@ -46,10 +34,10 @@ public class Outcomes {
   public void addWinner(Player winner) {
     switch (winner) {
       case ONE:
-        firstPlayerWins++;
+        first++;
         break;
       case TWO:
-        secondPlayerWins++;
+        second++;
         break;
       default:
         ties++;
@@ -57,35 +45,27 @@ public class Outcomes {
   }
 
   public int getTotalOutcomes() {
-    return firstPlayerWins + secondPlayerWins + ties;
+    return first + second + ties;
   }
 
   @Override
   public boolean equals(Object o) {
     if (o == null || getClass() != o.getClass()) return false;
     Outcomes outcomes = (Outcomes) o;
-    return firstPlayerWins == outcomes.firstPlayerWins
-        && secondPlayerWins == outcomes.secondPlayerWins
-        && ties == outcomes.ties;
+    return first == outcomes.first && second == outcomes.second && ties == outcomes.ties;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(firstPlayerWins, secondPlayerWins, ties);
+    return Objects.hashCode(first, second, ties);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("firstPlayerWins", firstPlayerWins)
-        .add("secondPlayerWins", secondPlayerWins)
+        .add("first", first)
+        .add("second", second)
         .add("ties", ties)
         .toString();
-  }
-
-  public void reset() {
-    firstPlayerWins = 0;
-    secondPlayerWins = 0;
-    ties = 0;
   }
 }

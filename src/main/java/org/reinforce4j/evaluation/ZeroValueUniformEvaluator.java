@@ -1,10 +1,9 @@
 package org.reinforce4j.evaluation;
 
 import java.util.Arrays;
-import org.reinforce4j.core.GameState;
 
 // Constant evaluation zero value and uniform distribution for moves.
-public class ZeroValueUniformEvaluator<T extends GameState> implements Evaluator<T> {
+public class ZeroValueUniformEvaluator implements Evaluator {
 
   private final float policyValue;
 
@@ -13,8 +12,8 @@ public class ZeroValueUniformEvaluator<T extends GameState> implements Evaluator
   }
 
   @Override
-  public void evaluate(GameStateAndEvaluation<T>... envelopes) {
-    for (GameStateAndEvaluation<T> envelope : envelopes) {
+  public void evaluate(EvaluatedGameState... envelopes) {
+    for (EvaluatedGameState envelope : envelopes) {
       if (envelope == null || envelope.state().isGameOver()) {
         continue;
       }

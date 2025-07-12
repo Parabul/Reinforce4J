@@ -4,7 +4,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import org.junit.jupiter.api.Test;
 import org.reinforce4j.games.TicTacToe;
-import org.reinforce4j.games.TicTacToeService;
 
 class ZeroValueUniformEvaluatorTest {
 
@@ -12,13 +11,12 @@ class ZeroValueUniformEvaluatorTest {
 
   @Test
   void shouldEvaluateRoot() {
-    TicTacToeService service = TicTacToeService.INSTANCE;
-    TicTacToe root = service.newInitialState();
-    StateEvaluation evaluation = new StateEvaluation(service.numMoves());
+    TicTacToe root = new TicTacToe();
+    StateEvaluation evaluation = new StateEvaluation(9);
 
-    GameStateAndEvaluation envelope = GameStateAndEvaluationEnvelope.create(root, evaluation);
+    EvaluatedGameState envelope = EvaluatedGameStateEnvelope.create(root, evaluation);
 
-    ZeroValueUniformEvaluator evaluator = new ZeroValueUniformEvaluator(service.numMoves());
+    ZeroValueUniformEvaluator evaluator = new ZeroValueUniformEvaluator(9);
     evaluator.evaluate(envelope);
 
     assertThat(evaluation.getValue()).isZero();
@@ -30,14 +28,14 @@ class ZeroValueUniformEvaluatorTest {
 
   @Test
   void shouldEvaluateNonRoot() {
-    TicTacToeService service = TicTacToeService.INSTANCE;
-    TicTacToe root = service.newInitialState();
+
+    TicTacToe root = new TicTacToe();
     root.move(4);
-    StateEvaluation evaluation = new StateEvaluation(service.numMoves());
+    StateEvaluation evaluation = new StateEvaluation(9);
 
-    GameStateAndEvaluation envelope = GameStateAndEvaluationEnvelope.create(root, evaluation);
+    EvaluatedGameState envelope = EvaluatedGameStateEnvelope.create(root, evaluation);
 
-    ZeroValueUniformEvaluator evaluator = new ZeroValueUniformEvaluator(service.numMoves());
+    ZeroValueUniformEvaluator evaluator = new ZeroValueUniformEvaluator(9);
     evaluator.evaluate(envelope);
 
     assertThat(evaluation.getValue()).isZero();

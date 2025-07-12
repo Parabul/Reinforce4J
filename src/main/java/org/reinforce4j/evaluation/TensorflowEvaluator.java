@@ -1,7 +1,7 @@
 package org.reinforce4j.evaluation;
 
-import org.reinforce4j.core.GameService;
-import org.reinforce4j.core.GameState;
+import org.reinforce4j.constants.NumberOfFeatures;
+import org.reinforce4j.constants.NumberOfMoves;
 import org.tensorflow.Result;
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Session;
@@ -11,7 +11,7 @@ import org.tensorflow.ndarray.StdArrays;
 import org.tensorflow.ndarray.buffer.DataBuffers;
 import org.tensorflow.types.TFloat32;
 
-public class TensorflowEvaluator<T extends GameState> implements Evaluator<T> {
+public class TensorflowEvaluator implements Evaluator {
 
   public static final String TIC_TAC_TOE_V1 =
       TensorflowEvaluator.class.getResource("/tensorflow/models/tic_tac_toe_v1/").getPath();
@@ -32,26 +32,25 @@ public class TensorflowEvaluator<T extends GameState> implements Evaluator<T> {
   private final String inputName;
   private final String valueOutputName;
   private final String policyOutputName;
-  private final GameService<T> gameService;
   private final float[] batch;
   private final Shape shape;
   private final int numFeatures;
 
-  public TensorflowEvaluator(String modelPath, GameService<T> gameService) {
+  public TensorflowEvaluator(
+      String modelPath, NumberOfMoves numberOfMoves, NumberOfFeatures numberOfFeatures) {
     SavedModelBundle model = SavedModelBundle.load(modelPath, SERVE_TAG);
     Signature signature = model.function(FUNCTION_NAME).signature();
     this.inputName = signature.getInputs().get(INPUT).name;
     this.valueOutputName = signature.getOutputs().get(VALUE_OUTPUT).name;
     this.policyOutputName = signature.getOutputs().get(POLICY_OUTPUT).name;
     this.session = model.session();
-    this.gameService = gameService;
-    this.batch = new float[gameService.numMoves() * gameService.numFeatures()];
-    this.shape = Shape.of(gameService.numMoves(), gameService.numFeatures());
-    this.numFeatures = gameService.numFeatures();
+    this.batch = new float[numberOfMoves.value() * numberOfFeatures.value()];
+    this.shape = Shape.of(numberOfMoves.value(), numberOfFeatures.value());
+    this.numFeatures = numberOfFeatures.value();
   }
 
   @Override
-  public void evaluate(GameStateAndEvaluation<T>... nodes) {
+  public void evaluate(EvaluatedGameState... nodes) {
     for (int i = 0; i < nodes.length; i++) {
       if (nodes[i] == null) {
         continue;
@@ -81,7 +80,7 @@ public class TensorflowEvaluator<T extends GameState> implements Evaluator<T> {
       if (nodes[i] == null) {
         continue;
       }
-      GameStateAndEvaluation<T> node = nodes[i];
+      EvaluatedGameState node = nodes[i];
       System.arraycopy(
           policyOutput[i], 0, node.evaluation().getPolicy(), 0, policyOutput[i].length);
       nodes[i].evaluation().setValue(valueOutput[i][0]);

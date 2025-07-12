@@ -3,10 +3,13 @@ package org.reinforce4j.evaluation;
 import ai.onnxruntime.*;
 import com.google.common.collect.ImmutableMap;
 import java.nio.FloatBuffer;
-import org.reinforce4j.core.GameService;
-import org.reinforce4j.core.GameState;
+import org.reinforce4j.constants.NumberOfFeatures;
+import org.reinforce4j.constants.NumberOfMoves;
 
-public class OnnxEvaluator<T extends GameState> implements Evaluator<T> {
+public class OnnxEvaluator implements Evaluator {
+
+  public static final String CONNECT4_V0 =
+      TensorflowEvaluator.class.getResource("/onnx/models/connect4_model_v0.onnx").getPath();
 
   public static final String CONNECT4_V1 =
       TensorflowEvaluator.class.getResource("/onnx/models/connect4_v0.onnx").getPath();
@@ -28,7 +31,8 @@ public class OnnxEvaluator<T extends GameState> implements Evaluator<T> {
   private final int numFeatures;
   private final FloatBuffer buffer;
 
-  public OnnxEvaluator(String modelPath, GameService<T> gameService) {
+  public OnnxEvaluator(
+      String modelPath, NumberOfFeatures numberOfFeatures, NumberOfMoves numberOfMoves) {
     env = OrtEnvironment.getEnvironment();
     OrtSession.SessionOptions sessionOptions = new OrtSession.SessionOptions();
     try {
@@ -39,14 +43,14 @@ public class OnnxEvaluator<T extends GameState> implements Evaluator<T> {
       throw new RuntimeException(e);
     }
 
-    this.batch = new float[gameService.numMoves() * gameService.numFeatures()];
+    this.batch = new float[numberOfMoves.value() * numberOfFeatures.value()];
     this.buffer = FloatBuffer.wrap(batch);
-    this.shape = new long[] {gameService.numMoves(), gameService.numFeatures()};
-    this.numFeatures = gameService.numFeatures();
+    this.shape = new long[] {numberOfMoves.value(), numberOfFeatures.value()};
+    this.numFeatures = numberOfFeatures.value();
   }
 
   @Override
-  public void evaluate(GameStateAndEvaluation<T>... nodes) {
+  public void evaluate(EvaluatedGameState... nodes) {
     try {
       for (int i = 0; i < nodes.length; i++) {
         if (nodes[i] == null) {
@@ -66,7 +70,7 @@ public class OnnxEvaluator<T extends GameState> implements Evaluator<T> {
           if (nodes[i] == null) {
             continue;
           }
-          GameStateAndEvaluation<T> node = nodes[i];
+          EvaluatedGameState node = nodes[i];
           System.arraycopy(policy[i], 0, node.evaluation().getPolicy(), 0, policy[i].length);
           nodes[i].evaluation().setValue(value[i][0]);
         }

@@ -1,27 +1,78 @@
 package org.reinforce4j.games;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
 import org.reinforce4j.core.GameState;
 import org.reinforce4j.core.Player;
 
-public class Connect4 implements GameState<Connect4> {
-  public static final int ROWS = 6;
-  public static final int COLS = 7;
-
-  private final byte PLAYER_ONE_VALUE = (byte) 1;
-  private final byte PLAYER_TWO_VALUE = (byte) -1;
+public class Connect4 implements GameState {
+  private static final int ROWS = 6;
+  private static final int COLS = 7;
+  private static final byte PLAYER_ONE_VALUE = (byte) 1;
+  private static final byte PLAYER_TWO_VALUE = (byte) -1;
 
   private final byte[][] board = new byte[ROWS][COLS];
-  private Player currentPlayer;
+  private final Player currentPlayer;
+  private final boolean isGameOver;
+  private final Player winner;
 
-  private boolean isGameOver = false;
-  private Player winner = null;
+  public Connect4() {
+    this(new byte[ROWS][COLS], Player.ONE, false, null);
+  }
 
-  /*package private*/ Connect4(byte[][] board, Player currentPlayer) {
+  @VisibleForTesting
+  Connect4(byte[][] board, Player currentPlayer, boolean isGameOver, Player winner) {
     for (int i = 0; i < ROWS; i++) {
       System.arraycopy(board[i], 0, this.board[i], 0, COLS);
     }
     this.currentPlayer = currentPlayer;
+    this.isGameOver = isGameOver;
+    this.winner = winner;
+  }
+
+  private static boolean checkGameOver(byte[][] board, int row, int col) {
+    int player = board[row][col];
+    boolean winGameOver =
+        countConsecutive(board, row, col, 1, 0, player)
+                    + countConsecutive(board, row, col, -1, 0, player)
+                >= 3
+            || countConsecutive(board, row, col, 0, 1, player)
+                    + countConsecutive(board, row, col, 0, -1, player)
+                >= 3
+            || countConsecutive(board, row, col, 1, 1, player)
+                    + countConsecutive(board, row, col, -1, -1, player)
+                >= 3
+            || countConsecutive(board, row, col, 1, -1, player)
+                    + countConsecutive(board, row, col, -1, 1, player)
+                >= 3;
+    if (winGameOver) {
+      return true;
+    }
+
+    // Tie game over;
+    return isTieGameOver(board, col);
+  }
+
+  private static boolean isTieGameOver(byte[][] board, int lastMove) {
+    for (int i = 0; i < Connect4.COLS; i++) {
+      if (board[0][lastMove] == 0) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private static int countConsecutive(
+      byte[][] board, int row, int col, int dRow, int dCol, int player) {
+    int count = 0;
+    for (int i = 1; i < 4; i++) {
+      int r = row + dRow * i;
+      int c = col + dCol * i;
+      if (r < 0 || r >= ROWS || c < 0 || c >= COLS || board[r][c] != player) break;
+      count++;
+    }
+    return count;
   }
 
   @Override
@@ -61,8 +112,12 @@ public class Connect4 implements GameState<Connect4> {
   }
 
   @Override
-  public void move(int col) {
+  public Connect4 move(int col) {
     int lastRow = -1;
+    byte[][] board = new byte[ROWS][COLS];
+    for (int i = 0; i < ROWS; i++) {
+      System.arraycopy(this.board[i], 0, board[i], 0, COLS);
+    }
     for (int row = ROWS - 1; row >= 0; row--) {
       if (board[row][col] == 0) {
         board[row][col] = currentPlayer == Player.ONE ? PLAYER_ONE_VALUE : PLAYER_TWO_VALUE;
@@ -71,12 +126,15 @@ public class Connect4 implements GameState<Connect4> {
       }
     }
 
-    isGameOver = checkGameOver(lastRow, col);
+    boolean isGameOver = checkGameOver(board, lastRow, col);
+    Player winner = null;
     if (isGameOver) {
-      winner = isTieGameOver(col) ? Player.NONE : currentPlayer;
+      winner = isTieGameOver(board, col) ? Player.NONE : currentPlayer;
     }
 
-    currentPlayer = currentPlayer.opponent;
+    Player currentPlayer = this.currentPlayer.opponent;
+
+    return new Connect4(board, currentPlayer, isGameOver, winner);
   }
 
   @Override
@@ -103,54 +161,5 @@ public class Connect4 implements GameState<Connect4> {
     }
     sb.append("0 1 2 3 4 5 6\n");
     return sb.toString();
-  }
-
-  @Override
-  public void copy(Connect4 other) {
-    for (int i = 0; i < Connect4.ROWS; i++) {
-      System.arraycopy(other.board[i], 0, this.board[i], 0, Connect4.COLS);
-    }
-    this.currentPlayer = other.currentPlayer;
-    this.winner = other.winner;
-    this.isGameOver = other.isGameOver;
-  }
-
-  private boolean checkGameOver(int row, int col) {
-    int player = board[row][col];
-    boolean winGameOver =
-        countConsecutive(row, col, 1, 0, player) + countConsecutive(row, col, -1, 0, player) >= 3
-            || countConsecutive(row, col, 0, 1, player) + countConsecutive(row, col, 0, -1, player)
-                >= 3
-            || countConsecutive(row, col, 1, 1, player) + countConsecutive(row, col, -1, -1, player)
-                >= 3
-            || countConsecutive(row, col, 1, -1, player) + countConsecutive(row, col, -1, 1, player)
-                >= 3;
-    if (winGameOver) {
-      return true;
-    }
-
-    // Tie game over;
-    return isTieGameOver(col);
-  }
-
-  boolean isTieGameOver(int lastMove) {
-    for (int i = 0; i < Connect4.COLS; i++) {
-      if (board[0][lastMove] == 0) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  private int countConsecutive(int row, int col, int dRow, int dCol, int player) {
-    int count = 0;
-    for (int i = 1; i < 4; i++) {
-      int r = row + dRow * i;
-      int c = col + dCol * i;
-      if (r < 0 || r >= ROWS || c < 0 || c >= COLS || board[r][c] != player) break;
-      count++;
-    }
-    return count;
   }
 }

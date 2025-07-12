@@ -27,7 +27,7 @@ def decode_fn(record_bytes):
 files = tf.data.Dataset.list_files(input_path)
 dataset = tf.data.TFRecordDataset(files)
 dataset = dataset.map(decode_fn)
-dataset = dataset.shuffle(buffer_size=10000) # Shuffle the dataset
+dataset = dataset.shuffle(buffer_size=128) # Shuffle the dataset
 dataset = dataset.batch(32)
 dataset = dataset.prefetch(tf.data.AUTOTUNE) # Prefetch for performance
 
@@ -69,14 +69,14 @@ def alphazero_model(input_shape, reshaped_shape, num_filters, num_residual_block
     # Policy Head
     policy_conv = layers.Conv2D(2, (1, 1), padding='same', activation='relu')(x)
     policy_flat = layers.Flatten()(policy_conv)
-    // Try sparsemax
-    policy_output = layers.Dense(num_policy_moves, activation='softmax', name='value_output')(policy_flat)
+    # Try sparsemax
+    policy_output = layers.Dense(num_policy_moves, activation='softmax', name='policy_output')(policy_flat)
 
     # Value Head
     value_conv = layers.Conv2D(1, (1, 1), padding='same', activation='relu')(x)
     value_flat = layers.Flatten()(value_conv)
     value_dense = layers.Dense(num_value_units, activation='relu')(value_flat)
-    value_output = layers.Dense(1, activation='sigmoid', name='policy_output')(value_dense)
+    value_output = layers.Dense(1, activation='tanh', name='value_output')(value_dense)
 
     model = tf.keras.Model(inputs=input_layer, outputs = {'value_output': value_output, 'policy_output': policy_output})
     return model
@@ -85,9 +85,9 @@ def alphazero_model(input_shape, reshaped_shape, num_filters, num_residual_block
 input_shape = (42,)  # Raw input
 reshaped_shape = (6, 7, 1)
 num_filters = 64
-num_residual_blocks = 10
+num_residual_blocks = 5
 num_policy_moves = 7
-num_value_units = 512
+num_value_units = 128
 
 model = alphazero_model(input_shape, reshaped_shape, num_filters, num_residual_blocks, num_policy_moves, num_value_units)
 
@@ -96,14 +96,14 @@ model.summary()
 
 # Compile the model
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
-              loss=['categorical_crossentropy', 'mse'],
+              loss=[tf.keras.losses.KLDivergence(), 'mse'],
               metrics={'value_output': ['mse'], 'policy_output': ['accuracy', 'categorical_crossentropy']})
 
 # Callbacks
 early_stopping = callbacks.EarlyStopping(monitor='loss', min_delta=0.0001, patience=3, restore_best_weights=True)
 
 # Train the model
-model.fit(dataset, callbacks=[early_stopping], epochs=30, verbose=2)
+model.fit(dataset, callbacks=[early_stopping], epochs=30)
 
 # Predictions (for testing)
 np.set_printoptions(precision=3, suppress=True)

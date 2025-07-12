@@ -12,7 +12,7 @@ class Connect4Test {
 
   @BeforeEach
   void setUp() {
-    game = new Connect4(new byte[6][7], Player.ONE);
+    game = new Connect4();
   }
 
   @Test
@@ -27,15 +27,15 @@ class Connect4Test {
 
   @Test
   void testMakeMove() {
-    game.move(3);
+    game = game.move(3);
     assertEquals(1, game.getBoard()[5][3]); // Player.ONE moves to bottom-most available row
   }
 
   @Test
   void testMakeMoveAlternatesPlayers() {
-    game.move(2);
+    game = game.move(2);
     assertEquals(Player.TWO, game.getCurrentPlayer());
-    game.move(2);
+    game = game.move(2);
     assertEquals(Player.ONE, game.getCurrentPlayer());
   }
 
@@ -43,7 +43,7 @@ class Connect4Test {
   void testisMoveAllowed() {
     assertTrue(game.isMoveAllowed(2));
     for (int i = 0; i < 6; i++) {
-      game.move(2);
+      game = game.move(2);
     }
     assertFalse(game.isMoveAllowed(2)); // Column is full
   }
@@ -51,10 +51,10 @@ class Connect4Test {
   @Test
   void testVerticalWin() {
     for (int i = 0; i < 3; i++) {
-      game.move(2);
-      game.move(3); // Alternate moves to avoid early win
+      game = game.move(2);
+      game = game.move(3); // Alternate moves to avoid early win
     }
-    game.move(2);
+    game = game.move(2);
     assertTrue(game.isGameOver());
     assertEquals(Player.ONE, game.getWinner());
   }
@@ -62,20 +62,20 @@ class Connect4Test {
   @Test
   void testHorizontalWin() {
     for (int i = 0; i < 3; i++) {
-      game.move(i);
-      game.move(i); // Alternate moves to avoid early win
+      game = game.move(i);
+      game = game.move(i); // Alternate moves to avoid early win
     }
-    game.move(3);
+    game = game.move(3);
     assertTrue(game.isGameOver());
     assertEquals(Player.ONE, game.getWinner());
   }
 
   @Test
   void testEncode() {
-    Connect4 game = new Connect4(new byte[6][7], Player.ONE);
+    Connect4 game = new Connect4();
 
-    game.move(3);
-    game.move(3);
+    game = game.move(3);
+    game = game.move(3);
     assertThat(game.encode())
         .usingTolerance(0.0001)
         .containsExactly(
@@ -84,22 +84,6 @@ class Connect4Test {
               0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
               0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f
             });
-  }
-
-  @Test
-  public void copiesStates() {
-    Connect4 from = (Connect4Service.INSTANCE).newInitialState();
-    from.move(1);
-    from.move(5);
-
-    Connect4 to = (Connect4Service.INSTANCE).newInitialState();
-    assertThat(to).isNotEqualTo(from);
-
-    to.copy(from);
-    assertThat(to).isEqualTo(from);
-
-    from.move(5);
-    assertThat(to).isNotEqualTo(from);
   }
 
   @Test
@@ -115,14 +99,16 @@ class Connect4Test {
               {1, -1, -1, 1, 1, 1, -1},
               {-1, 1, -1, -1, -1, 1, 1}
             },
-            Player.TWO);
+            Player.TWO,
+            false,
+            null);
 
     assertFalse(almostGameOver.isGameOver());
     assertNull(almostGameOver.getWinner());
 
-    almostGameOver.move(6);
+    Connect4 gameOver = almostGameOver.move(6);
 
-    assertTrue(almostGameOver.isGameOver());
-    assertEquals(Player.NONE, almostGameOver.getWinner());
+    assertTrue(gameOver.isGameOver());
+    assertEquals(Player.NONE, gameOver.getWinner());
   }
 }

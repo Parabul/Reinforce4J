@@ -1,37 +1,83 @@
 package org.reinforce4j.games;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
 import org.reinforce4j.core.GameState;
 import org.reinforce4j.core.Player;
 
-public class TicTacToe implements GameState<TicTacToe> {
+public class TicTacToe implements GameState {
 
-  private final byte[][] cells = new byte[3][3];
-  private final byte PLAYER_ONE_VALUE = 1;
-  private final byte PLAYER_TWO_VALUE = -1;
-  private Player currentPlayer;
-  private boolean isGameOver = false;
-  private Player winner = null;
+  private static final byte PLAYER_ONE_VALUE = 1;
+  private static final byte PLAYER_TWO_VALUE = -1;
+  private static final int SIZE = 3;
 
-  /*package private*/ TicTacToe(byte[][] cells, Player currentPlayer) {
-    for (int i = 0; i < 3; i++) {
-      System.arraycopy(cells[i], 0, this.cells[i], 0, 3);
+  private final byte[][] board = new byte[SIZE][SIZE];
+  private final Player currentPlayer;
+  private final boolean isGameOver;
+  private final Player winner;
+
+  public TicTacToe() {
+    this(new byte[SIZE][SIZE], Player.ONE, false, null);
+  }
+
+  @VisibleForTesting
+  TicTacToe(byte[][] board, Player currentPlayer, boolean isGameOver, Player winner) {
+    for (int i = 0; i < SIZE; i++) {
+      System.arraycopy(board[i], 0, this.board[i], 0, SIZE);
     }
     this.currentPlayer = currentPlayer;
+    this.isGameOver = isGameOver;
+    this.winner = winner;
   }
 
-  @Override
-  public void copy(TicTacToe other) {
-    for (int i = 0; i < 3; i++) {
-      System.arraycopy(other.cells[i], 0, this.cells[i], 0, 3);
+  private static Player getWinner(byte[][] board) {
+    for (int i = 0; i < SIZE; i++) {
+      if (board[i][0] == board[i][1] && board[i][1] == board[i][2] && board[i][1] != 0) {
+        return board[i][1] == 1 ? Player.ONE : Player.TWO;
+      }
+      if (board[0][i] == board[1][i] && board[1][i] == board[2][i] && board[1][i] != 0) {
+        return board[1][i] == 1 ? Player.ONE : Player.TWO;
+      }
     }
-    this.currentPlayer = other.currentPlayer;
-    this.winner = other.winner;
-    this.isGameOver = other.isGameOver;
+
+    if (board[0][0] == board[1][1] && board[1][1] == board[2][2] && board[1][1] != 0) {
+      return board[1][1] == 1 ? Player.ONE : Player.TWO;
+    }
+
+    if (board[2][0] == board[1][1] && board[1][1] == board[0][2] && board[1][1] != 0) {
+      return board[1][1] == 1 ? Player.ONE : Player.TWO;
+    }
+
+    return Player.NONE;
   }
 
-  public byte[][] getCells() {
-    return cells;
+  private static boolean checkGameOver(byte[][] board) {
+    for (int i = 0; i < SIZE; i++) {
+      if (board[i][0] == board[i][1] && board[i][1] == board[i][2] && board[i][1] != 0) {
+        return true;
+      }
+      if (board[0][i] == board[1][i] && board[1][i] == board[2][i] && board[1][i] != 0) {
+        return true;
+      }
+    }
+
+    if (board[0][0] == board[1][1] && board[1][1] == board[2][2] && board[1][1] != 0) {
+      return true;
+    }
+
+    if (board[2][0] == board[1][1] && board[1][1] == board[0][2] && board[1][1] != 0) {
+      return true;
+    }
+
+    for (int i = 0; i < SIZE; i++) {
+      for (int j = 0; j < SIZE; j++) {
+        if (board[i][j] == 0) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 
   @Override
@@ -41,35 +87,44 @@ public class TicTacToe implements GameState<TicTacToe> {
 
   @Override
   public boolean isMoveAllowed(int move) {
-    int i = move / 3;
-    int j = move % 3;
-    return cells[i][j] == 0;
+    int i = move / SIZE;
+    int j = move % SIZE;
+    return board[i][j] == 0;
   }
 
   @Override
   public float[] encode() {
     float[] buffer = new float[9];
     for (int move = 0; move < 9; move++) {
-      int i = move / 3;
-      int j = move % 3;
+      int i = move / SIZE;
+      int j = move % SIZE;
 
-      buffer[move] = cells[i][j];
+      buffer[move] = board[i][j];
     }
     return buffer;
   }
 
   @Override
-  public void move(int move) {
-    int i = move / 3;
-    int j = move % 3;
-    cells[i][j] = currentPlayer == Player.ONE ? PLAYER_ONE_VALUE : PLAYER_TWO_VALUE;
+  public TicTacToe move(int move) {
+    int i = move / SIZE;
+    int j = move % SIZE;
 
-    isGameOver = checkGameOver();
-    if (isGameOver) {
-      winner = checkWinner();
+    byte[][] newBoard = new byte[SIZE][SIZE];
+    for (int k = 0; k < SIZE; k++) {
+      System.arraycopy(this.board[k], 0, newBoard[k], 0, SIZE);
     }
 
-    currentPlayer = currentPlayer.opponent;
+    newBoard[i][j] = currentPlayer == Player.ONE ? PLAYER_ONE_VALUE : PLAYER_TWO_VALUE;
+
+    boolean isGameOver = checkGameOver(newBoard);
+    Player winner = null;
+    if (isGameOver) {
+      winner = getWinner(newBoard);
+    }
+
+    Player currentPlayer = this.currentPlayer.opponent;
+
+    return new TicTacToe(newBoard, currentPlayer, isGameOver, winner);
   }
 
   @Override
@@ -82,69 +137,15 @@ public class TicTacToe implements GameState<TicTacToe> {
     return winner;
   }
 
-  public boolean checkGameOver() {
-    for (int i = 0; i < 3; i++) {
-      if (cells[i][0] == cells[i][1] && cells[i][1] == cells[i][2] && cells[i][1] != 0) {
-        return true;
-      }
-      if (cells[0][i] == cells[1][i] && cells[1][i] == cells[2][i] && cells[1][i] != 0) {
-        return true;
-      }
-    }
-
-    if (cells[0][0] == cells[1][1] && cells[1][1] == cells[2][2] && cells[1][1] != 0) {
-      return true;
-    }
-
-    if (cells[2][0] == cells[1][1] && cells[1][1] == cells[0][2] && cells[1][1] != 0) {
-      return true;
-    }
-
-    for (int i = 0; i < 3; i++) {
-      for (int j = 0; j < 3; j++) {
-        if (cells[i][j] == 0) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  }
-
-  public Player checkWinner() {
-    if (!isGameOver()) {
-      return null;
-    }
-
-    for (int i = 0; i < 3; i++) {
-      if (cells[i][0] == cells[i][1] && cells[i][1] == cells[i][2] && cells[i][1] != 0) {
-        return cells[i][1] == 1 ? Player.ONE : Player.TWO;
-      }
-      if (cells[0][i] == cells[1][i] && cells[1][i] == cells[2][i] && cells[1][i] != 0) {
-        return cells[1][i] == 1 ? Player.ONE : Player.TWO;
-      }
-    }
-
-    if (cells[0][0] == cells[1][1] && cells[1][1] == cells[2][2] && cells[1][1] != 0) {
-      return cells[1][1] == 1 ? Player.ONE : Player.TWO;
-    }
-
-    if (cells[2][0] == cells[1][1] && cells[1][1] == cells[0][2] && cells[1][1] != 0) {
-      return cells[1][1] == 1 ? Player.ONE : Player.TWO;
-    }
-
-    return Player.NONE;
-  }
-
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("\n");
-    for (int i = 0; i < 3; i++) {
-      for (int j = 0; j < 3; j++) {
-        if (cells[i][j] == 0) {
+    for (int i = 0; i < SIZE; i++) {
+      for (int j = 0; j < SIZE; j++) {
+        if (board[i][j] == 0) {
           sb.append(' ');
-        } else if (cells[i][j] == 1) {
+        } else if (board[i][j] == 1) {
           sb.append('X');
         } else {
           sb.append('O');
@@ -168,11 +169,11 @@ public class TicTacToe implements GameState<TicTacToe> {
     if (this == o) return true;
     if (!(o instanceof TicTacToe)) return false;
     TicTacToe ticTacToe = (TicTacToe) o;
-    return Arrays.deepEquals(cells, ticTacToe.cells);
+    return Arrays.deepEquals(board, ticTacToe.board);
   }
 
   @Override
   public int hashCode() {
-    return Arrays.deepHashCode(cells);
+    return Arrays.deepHashCode(board);
   }
 }

@@ -12,9 +12,9 @@ public class StateEvaluation {
   // favors the opponent.
   private float value;
 
-  public StateEvaluation(int numMoves) {
+  public StateEvaluation(int numberOfMoves) {
     value = 0;
-    policy = new float[numMoves];
+    policy = new float[numberOfMoves];
   }
 
   public float getValue() {

@@ -3,19 +3,19 @@ package org.reinforce4j.evaluation;
 import org.reinforce4j.core.*;
 
 // Only evaluates states that are GameOver otherwise uses delegate.
-public class GameOverEvaluator<T extends GameState> implements Evaluator<T> {
+public class GameOverEvaluator implements Evaluator {
 
-  private final Evaluator<T> delegate;
+  private final Evaluator delegate;
 
-  public GameOverEvaluator(Evaluator<T> delegate) {
+  public GameOverEvaluator(Evaluator delegate) {
     this.delegate = delegate;
   }
 
   @Override
-  public void evaluate(GameStateAndEvaluation<T>... envelopes) {
+  public void evaluate(EvaluatedGameState... envelopes) {
     delegate.evaluate(envelopes);
 
-    for (GameStateAndEvaluation<T> envelope : envelopes) {
+    for (EvaluatedGameState envelope : envelopes) {
       if (envelope == null) {
         continue;
       }
