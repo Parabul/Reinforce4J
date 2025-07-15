@@ -1,8 +1,8 @@
 package org.reinforce4j.montecarlo.tasks;
 
-import org.reinforce4j.montecarlo.TreeNode;
+import org.reinforce4j.core.GameState;
 
 /** Factory class that generates Tasks executed against SearchTree. */
 public interface ExpandTaskFactory {
-  ExpandTask create(TreeNode root, int numExpansions);
+  ExpandTask create(GameState gameState, int numExpansions);
 }

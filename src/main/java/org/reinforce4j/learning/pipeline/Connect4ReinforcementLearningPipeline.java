@@ -9,15 +9,8 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import org.reinforce4j.constants.NumberOfFeatures;
-import org.reinforce4j.constants.NumberOfMoves;
-import org.reinforce4j.evaluation.GameOverEvaluator;
-import org.reinforce4j.evaluation.OnnxEvaluator;
-import org.reinforce4j.evaluation.ZeroValueUniformEvaluator;
 import org.reinforce4j.games.Connect4;
 import org.reinforce4j.learning.execute.ModelTrainerExecutor;
-import org.reinforce4j.montecarlo.MonteCarloTreeSearchSettings;
-import org.reinforce4j.montecarlo.TreeNode;
 import org.reinforce4j.montecarlo.MonteCarloTreeSearchModule;
 import org.reinforce4j.montecarlo.TreeSearch;
 import org.reinforce4j.utils.tfrecord.TFRecordWriter;
@@ -38,17 +31,9 @@ public class Connect4ReinforcementLearningPipeline {
     stopwatch.start();
 
     for (int i = 1; i < 5; i++) {
-      Injector injector =
-          Guice.createInjector(
-              new MonteCarloTreeSearchModule(
-                  MonteCarloTreeSearchSettings.builder()
-                      .setPruneMinVisits(10)
-                      .setWriteMinVisits(1000)
-                      .setEvaluator(() -> new GameOverEvaluator(new ZeroValueUniformEvaluator(7)))
-                      .build()));
+      Injector injector = Guice.createInjector(new MonteCarloTreeSearchModule());
       TreeSearch treeSearch = injector.getInstance(TreeSearch.class);
-      TreeNode root = new TreeNode(new Connect4(), 7);
-      List<Example> examples = treeSearch.explore(root);
+      List<Example> examples = treeSearch.explore(new Connect4());
 
       DataOutputStream outputStream =
           new DataOutputStream(new FileOutputStream(BASE_PATH + "training-" + i + ".tfrecord"));
@@ -78,23 +63,9 @@ public class Connect4ReinforcementLearningPipeline {
 
     for (int i = 1; i < 5; i++) {
 
-      Injector injector =
-          Guice.createInjector(
-              new MonteCarloTreeSearchModule(
-                  MonteCarloTreeSearchSettings.builder()
-                      .setPruneMinVisits(10)
-                      .setWriteMinVisits(1000)
-                      .setEvaluator(
-                          () ->
-                              new GameOverEvaluator(
-                                  new OnnxEvaluator(
-                                      OnnxEvaluator.CONNECT4_V0,
-                                      new NumberOfFeatures(42),
-                                      new NumberOfMoves(7))))
-                      .build()));
+      Injector injector = Guice.createInjector(new MonteCarloTreeSearchModule());
       TreeSearch treeSearch = injector.getInstance(TreeSearch.class);
-      TreeNode root = new TreeNode(new Connect4(), 7);
-      List<Example> examples = treeSearch.explore(root);
+      List<Example> examples = treeSearch.explore(new Connect4());
 
       DataOutputStream outputStream =
           new DataOutputStream(new FileOutputStream(BASE_PATH + "training-" + i + ".tfrecord"));

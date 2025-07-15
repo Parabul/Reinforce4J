@@ -1,26 +1,14 @@
-package org.reinforce4j.evaluation;
+package org.reinforce4j.evaluation.batch;
 
 import ai.onnxruntime.*;
 import com.google.common.collect.ImmutableMap;
-import java.nio.FloatBuffer;
-
 import com.google.inject.Inject;
+import java.nio.FloatBuffer;
 import org.reinforce4j.constants.NumberOfFeatures;
-import org.reinforce4j.constants.NumberOfMoves;
+import org.reinforce4j.evaluation.EvaluatedGameState;
+import org.reinforce4j.evaluation.Evaluator;
 
-public class OnnxEvaluator implements Evaluator {
-
-  public static final String CONNECT4_V0 =
-      TensorflowEvaluator.class.getResource("/onnx/models/connect4_model_v0.onnx").getPath();
-
-  public static final String CONNECT4_V1 =
-      TensorflowEvaluator.class.getResource("/onnx/models/connect4_v0.onnx").getPath();
-
-  public static final String CONNECT4_V2 =
-      TensorflowEvaluator.class.getResource("/onnx/models/connect4_v1.onnx").getPath();
-
-  public static final String CONNECT4_ALT_V0 =
-      TensorflowEvaluator.class.getResource("/onnx/models/connect4_alt_v0.onnx").getPath();
+public class BatchOnnxEvaluator implements Evaluator {
 
   private static final String INPUT = "input_1";
   private static final String VALUE_OUTPUT = "value_output";
@@ -28,14 +16,11 @@ public class OnnxEvaluator implements Evaluator {
 
   private final OrtEnvironment env;
   private final OrtSession session;
-  private final float[] batch;
-  private final long[] shape;
-  private final int numFeatures;
-  private final FloatBuffer buffer;
+  private final int numberOfFeatures;
 
   @Inject
-  public OnnxEvaluator(
-      String modelPath, NumberOfFeatures numberOfFeatures, NumberOfMoves numberOfMoves) {
+  public BatchOnnxEvaluator(String modelPath, NumberOfFeatures numberOfFeatures) {
+    this.numberOfFeatures = numberOfFeatures.value();
     env = OrtEnvironment.getEnvironment();
     OrtSession.SessionOptions sessionOptions = new OrtSession.SessionOptions();
     try {
@@ -45,22 +30,23 @@ public class OnnxEvaluator implements Evaluator {
     } catch (OrtException e) {
       throw new RuntimeException(e);
     }
-
-    this.batch = new float[numberOfMoves.value() * numberOfFeatures.value()];
-    this.buffer = FloatBuffer.wrap(batch);
-    this.shape = new long[] {numberOfMoves.value(), numberOfFeatures.value()};
-    this.numFeatures = numberOfFeatures.value();
   }
 
   @Override
   public void evaluate(EvaluatedGameState... nodes) {
     try {
+
+      float[] batch = new float[nodes.length * numberOfFeatures];
+      FloatBuffer buffer = FloatBuffer.wrap(batch);
+      long[] shape = new long[] {nodes.length, numberOfFeatures};
+
       for (int i = 0; i < nodes.length; i++) {
         if (nodes[i] == null) {
           continue;
         }
 
-        System.arraycopy(nodes[i].state().encode(), 0, batch, i * numFeatures, numFeatures);
+        System.arraycopy(
+            nodes[i].state().encode(), 0, batch, i * numberOfFeatures, numberOfFeatures);
       }
 
       try (OnnxTensor inputTensor = OnnxTensor.createTensor(env, buffer, shape);
