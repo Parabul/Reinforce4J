@@ -25,7 +25,7 @@ public class BatchEvaluatorTest {
               protected void configure() {
                 bind(Evaluator.class)
                     .annotatedWith(BatchEvaluatorModule.BatchEvaluatorDelegate.class)
-                    .toInstance(new ZeroValueUniformEvaluator(7));
+                    .toInstance(new ZeroValueUniformEvaluator(Connect4.NUM_MOVES));
               }
             });
   }
@@ -38,8 +38,8 @@ public class BatchEvaluatorTest {
     injector.getInstance(BatchEvaluator.class); // Eager singleton
 
     EvaluatedGameStateEnvelope[] gameStates = {
-      EvaluatedGameStateEnvelope.create(new Connect4(), new StateEvaluation(7)),
-      EvaluatedGameStateEnvelope.create(new Connect4(), new StateEvaluation(7))
+      EvaluatedGameStateEnvelope.create(new Connect4(), new StateEvaluation(Connect4.NUM_MOVES)),
+      EvaluatedGameStateEnvelope.create(new Connect4(), new StateEvaluation(Connect4.NUM_MOVES))
     };
 
     BatchEvaluationRequest request = new BatchEvaluationRequest(gameStates);

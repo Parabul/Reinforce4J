@@ -13,13 +13,13 @@ public class Connect4Module extends AbstractModule implements GameModule {
   @Singleton
   @Override
   public NumberOfMoves provideNumberOfMoves() {
-    return new NumberOfMoves(7);
+    return new NumberOfMoves(Connect4.NUM_MOVES);
   }
 
   @Provides
   @Singleton
   @Override
   public NumberOfFeatures provideNumberFeatures() {
-    return new NumberOfFeatures(42);
+    return new NumberOfFeatures(Connect4.NUM_FEATURES);
   }
 }

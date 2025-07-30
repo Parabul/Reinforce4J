@@ -1,15 +1,21 @@
 package org.reinforce4j.learning.pipeline;
 
 import com.google.common.base.Stopwatch;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import com.google.inject.*;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import org.reinforce4j.constants.NumberOfExpansionsPerNode;
+import org.reinforce4j.constants.NumberOfNodesToExpand;
+import org.reinforce4j.evaluation.Evaluator;
+import org.reinforce4j.evaluation.GameOverEvaluator;
+import org.reinforce4j.evaluation.ZeroValueUniformEvaluator;
+import org.reinforce4j.evaluation.batch.BatchEvaluatorModule;
 import org.reinforce4j.games.Connect4;
+import org.reinforce4j.games.Connect4Module;
 import org.reinforce4j.learning.execute.ModelTrainerExecutor;
 import org.reinforce4j.montecarlo.MonteCarloTreeSearchModule;
 import org.reinforce4j.montecarlo.TreeSearch;
@@ -30,8 +36,31 @@ public class Connect4ReinforcementLearningPipeline {
     logger.info("Start");
     stopwatch.start();
 
-    for (int i = 1; i < 5; i++) {
-      Injector injector = Guice.createInjector(new MonteCarloTreeSearchModule());
+    for (int i = 1; i < 3; i++) {
+      Injector injector =
+          Guice.createInjector(
+              new AbstractModule() {
+                @Override
+                protected void configure() {
+                  install(new Connect4Module());
+                  install(new MonteCarloTreeSearchModule());
+                  bind(Evaluator.class)
+                      .annotatedWith(BatchEvaluatorModule.BatchEvaluatorDelegate.class)
+                      .toInstance(new GameOverEvaluator(new ZeroValueUniformEvaluator(Connect4.NUM_MOVES)));
+                }
+
+                @Provides
+                @Singleton
+                public NumberOfExpansionsPerNode provideNumberOfExpansionsPerNode() {
+                  return new NumberOfExpansionsPerNode(10_000);
+                }
+
+                @Provides
+                @Singleton
+                public NumberOfNodesToExpand provideNumberOfNodesToExpand() {
+                  return new NumberOfNodesToExpand(10_000);
+                }
+              });
       TreeSearch treeSearch = injector.getInstance(TreeSearch.class);
       List<Example> examples = treeSearch.explore(new Connect4());
 

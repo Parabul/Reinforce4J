@@ -22,7 +22,7 @@ public class ReinforcementLearningPipeline {
   //                    MonteCarloTreeSearchSettings.<TicTacToe>withDefaults()
   //                        .setGameService(() -> TicTacToeService.INSTANCE)
   //                        .setEvaluator(
-  //                            () -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(9)))
+  //                            () -> new GameOverEvaluator<>(new ZeroValueUniformEvaluator<>(TicTacToe.NUM_MOVES)))
   //                        .build())
   //                .setBasePath(BASE_PATH)
   //                .build());

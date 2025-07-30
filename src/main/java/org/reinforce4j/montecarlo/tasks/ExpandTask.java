@@ -28,14 +28,12 @@ public class ExpandTask implements Runnable {
 
   private static final Logger logger = LoggerFactory.getLogger(ExpandTask.class);
 
-
   private final ExpandTaskFactory expandTaskFactory;
   private final ExpansionStrategy expansionStrategy;
   private final BatchClientEvaluator evaluator;
   private final ListeningExecutorService executor;
 
   private final GameState currentState;
-  private final int numExpansions;
   private final AtomicInteger completeExpansions;
   private final List<Example> expandedNodes;
   private final int numberOfMoves;
@@ -53,10 +51,8 @@ public class ExpandTask implements Runnable {
       AtomicInteger completeExpansions,
       ListeningExecutorService executor,
       @MonteCarloTreeSearchModule.ExpandedNodes List<Example> expandedNodes,
-      @Assisted GameState gameState,
-      @Assisted int numExpansions) {
+      @Assisted GameState gameState) {
     this.currentState = gameState;
-    this.numExpansions = numExpansions;
     this.numberOfExpansionsPerNode = numberOfExpansionsPerNode.value();
     this.numberOfNodesToExpand = numberOfNodesToExpand.value();
 
@@ -74,7 +70,7 @@ public class ExpandTask implements Runnable {
     try {
       TreeNode currentNode = new TreeNode(currentState, numberOfMoves);
 
-      for (int i = 0; i < numExpansions; i++) {
+      for (int i = 0; i < numberOfExpansionsPerNode; i++) {
         expand(currentNode);
       }
 
@@ -94,10 +90,13 @@ public class ExpandTask implements Runnable {
       }
 
       for (TreeNode child : currentNode.getChildStates()) {
+        if (child == null) {
+          continue;
+        }
         if (child.state().isGameOver()) {
           continue;
         }
-        executor.submit(expandTaskFactory.create(child.state(), numberOfExpansionsPerNode));
+        executor.submit(expandTaskFactory.create(child.state()));
       }
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
@@ -109,7 +108,7 @@ public class ExpandTask implements Runnable {
 
     while (!currentNode.state().isGameOver()) {
       // If child nodes are visited for the first time, collect average value.
-      Optional<AverageValue> childValue = initChildren(currentNode);
+      Optional<AverageValue> childValue = currentNode.initChildren(evaluator);
       if (childValue.isPresent()) {
         backPropagationStack.addLast(Pair.create(currentNode, childValue.get()));
       } else {
@@ -138,34 +137,5 @@ public class ExpandTask implements Runnable {
       // Update parents
       backPropagationStack.pollLast().getFirst().update(winner, accumulatedValue);
     }
-  }
-
-  private Optional<AverageValue> initChildren(TreeNode treeNode) {
-    if (treeNode.isInitialized()) {
-      return Optional.empty();
-    }
-    treeNode.setInitialized(true);
-    for (int move = 0; move < numberOfMoves; move++) {
-      if (!treeNode.state().isMoveAllowed(move)) {
-        continue;
-      }
-      treeNode.getChildStates()[move] = new TreeNode(treeNode.state().move(move), numberOfMoves);
-    }
-
-    evaluator.evaluate(treeNode.getChildStates());
-
-    AverageValue childrenAverageValue = new AverageValue();
-    for (int move = 0; move < numberOfMoves; move++) {
-      if (!treeNode.state().isMoveAllowed(move)) {
-        continue;
-      }
-      TreeNode childNode = treeNode.getChildStates()[move];
-      childNode
-          .getAverageValue()
-          .fromEvaluation(childNode.state().getCurrentPlayer(), childNode.evaluation().getValue());
-      childrenAverageValue.add(childNode.getAverageValue());
-    }
-
-    return Optional.of(childrenAverageValue);
   }
 }

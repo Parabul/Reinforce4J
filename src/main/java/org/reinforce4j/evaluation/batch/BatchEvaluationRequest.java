@@ -8,8 +8,7 @@ public class BatchEvaluationRequest {
   private final EvaluatedGameState[] evaluatedGameStates;
   private final CompletableFuture<Void> result;
 
-  public BatchEvaluationRequest(
-      EvaluatedGameState[] evaluatedGameStates) {
+  public BatchEvaluationRequest(EvaluatedGameState[] evaluatedGameStates) {
     this.evaluatedGameStates = evaluatedGameStates;
     this.result = new CompletableFuture<>();
   }

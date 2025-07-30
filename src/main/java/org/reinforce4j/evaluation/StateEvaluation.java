@@ -17,6 +17,10 @@ public class StateEvaluation {
     policy = new float[numberOfMoves];
   }
 
+  public int getNumberOfMoves() {
+    return policy.length;
+  }
+
   public float getValue() {
     return value;
   }

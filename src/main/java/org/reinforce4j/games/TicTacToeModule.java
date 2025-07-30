@@ -12,13 +12,13 @@ public class TicTacToeModule extends AbstractModule implements GameModule {
   @Provides
   @Singleton
   public NumberOfMoves provideNumberOfMoves() {
-    return new NumberOfMoves(9);
+    return new NumberOfMoves(TicTacToe.NUM_MOVES);
   }
 
   @Override
   @Provides
   @Singleton
   public NumberOfFeatures provideNumberFeatures() {
-    return new NumberOfFeatures(9);
+    return new NumberOfFeatures(TicTacToe.NUM_FEATURES);
   }
 }

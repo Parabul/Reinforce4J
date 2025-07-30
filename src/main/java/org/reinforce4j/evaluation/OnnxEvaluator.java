@@ -2,9 +2,8 @@ package org.reinforce4j.evaluation;
 
 import ai.onnxruntime.*;
 import com.google.common.collect.ImmutableMap;
-import java.nio.FloatBuffer;
-
 import com.google.inject.Inject;
+import java.nio.FloatBuffer;
 import org.reinforce4j.constants.NumberOfFeatures;
 import org.reinforce4j.constants.NumberOfMoves;
 

@@ -21,16 +21,16 @@ class OnnxEvaluatorTest {
   public void shouldEvaluateCorrectlyConnect4() throws OrtException {
     OnnxEvaluator evaluator =
         new OnnxEvaluator(
-            OnnxEvaluator.CONNECT4_V1, new NumberOfFeatures(42), new NumberOfMoves(7));
+            OnnxEvaluator.CONNECT4_V1, new NumberOfFeatures(Connect4.NUM_FEATURES), new NumberOfMoves(Connect4.NUM_MOVES));
 
     Connect4 game1 = new Connect4();
     Connect4 game2 = game1.move(3);
     Connect4 game3 = game2.move(3).move(2).move(3).move(1);
 
-    EvaluatedGameState node1 = EvaluatedGameStateEnvelope.create(game1, new StateEvaluation(7));
-    EvaluatedGameState node2 = EvaluatedGameStateEnvelope.create(game2, new StateEvaluation(7));
+    EvaluatedGameState node1 = EvaluatedGameStateEnvelope.create(game1, new StateEvaluation(Connect4.NUM_MOVES));
+    EvaluatedGameState node2 = EvaluatedGameStateEnvelope.create(game2, new StateEvaluation(Connect4.NUM_MOVES));
     EvaluatedGameStateEnvelope node3 =
-        EvaluatedGameStateEnvelope.create(game3, new StateEvaluation(7));
+        EvaluatedGameStateEnvelope.create(game3, new StateEvaluation(Connect4.NUM_MOVES));
 
     Stopwatch stopwatch = Stopwatch.createStarted();
     logger.info("Start");

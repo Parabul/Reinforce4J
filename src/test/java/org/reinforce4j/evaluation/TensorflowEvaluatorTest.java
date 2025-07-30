@@ -7,6 +7,7 @@ import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.reinforce4j.constants.NumberOfFeatures;
 import org.reinforce4j.constants.NumberOfMoves;
+import org.reinforce4j.games.Connect4;
 import org.reinforce4j.games.TicTacToe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +21,7 @@ public class TensorflowEvaluatorTest {
   public void shouldEvaluateCorrectly() {
     TensorflowEvaluator tensorflowBatchEvaluator =
         new TensorflowEvaluator(
-            TensorflowEvaluator.TIC_TAC_TOE_V1, new NumberOfMoves(9), new NumberOfFeatures(9));
+            TensorflowEvaluator.TIC_TAC_TOE_V1, new NumberOfMoves(TicTacToe.NUM_MOVES), new NumberOfFeatures(TicTacToe.NUM_MOVES));
 
     TicTacToe game1 = new TicTacToe();
     TicTacToe game2 = game1.move(4);
@@ -29,9 +30,9 @@ public class TensorflowEvaluatorTest {
     System.out.println(game2);
     System.out.println(Arrays.toString(game2.encode()));
 
-    EvaluatedGameState node1 = EvaluatedGameStateEnvelope.create(game1, new StateEvaluation(9));
-    EvaluatedGameState node2 = EvaluatedGameStateEnvelope.create(game2, new StateEvaluation(9));
-    EvaluatedGameState node3 = EvaluatedGameStateEnvelope.create(game3, new StateEvaluation(9));
+    EvaluatedGameState node1 = EvaluatedGameStateEnvelope.create(game1, new StateEvaluation(TicTacToe.NUM_MOVES));
+    EvaluatedGameState node2 = EvaluatedGameStateEnvelope.create(game2, new StateEvaluation(TicTacToe.NUM_MOVES));
+    EvaluatedGameState node3 = EvaluatedGameStateEnvelope.create(game3, new StateEvaluation(TicTacToe.NUM_MOVES));
 
     Stopwatch stopwatch = Stopwatch.createStarted();
     logger.info("Start");
@@ -87,13 +88,13 @@ public class TensorflowEvaluatorTest {
   @Test
   public void shouldEvaluateCorrectlyRootState() {
     TicTacToe root = new TicTacToe();
-    StateEvaluation evaluation = new StateEvaluation(9);
+    StateEvaluation evaluation = new StateEvaluation(TicTacToe.NUM_MOVES);
 
     EvaluatedGameState envelope = EvaluatedGameStateEnvelope.create(root, evaluation);
 
     TensorflowEvaluator tensorflowBatchEvaluator =
         new TensorflowEvaluator(
-            TensorflowEvaluator.TIC_TAC_TOE_V1, new NumberOfMoves(9), new NumberOfFeatures(9));
+            TensorflowEvaluator.TIC_TAC_TOE_V1, new NumberOfMoves(TicTacToe.NUM_MOVES), new NumberOfFeatures(TicTacToe.NUM_MOVES));
 
     tensorflowBatchEvaluator.evaluate(envelope);
 
@@ -114,91 +115,85 @@ public class TensorflowEvaluatorTest {
             })
         .inOrder();
   }
-  //
-  //  @Test
-  //  public void evaluateManyTimesCorrectly() {
-  //    TicTacToeService service = TicTacToeService.INSTANCE;
-  //    TicTacToe stateOne = service.newInitialState();
-  //    TicTacToe stateTwo = service.newInitialState();
-  //    stateTwo.move(4);
-  //
-  //    StateEvaluation evaluationOne = new StateEvaluation(service.numMoves());
-  //    StateEvaluation evaluationTwo = new StateEvaluation(service.numMoves());
-  //
-  //    EvaluatedGameState envelopeOne = EvaluatedGameStateEnvelope.create(stateOne, evaluationOne);
-  //    EvaluatedGameState envelopeTwo = EvaluatedGameStateEnvelope.create(stateTwo, evaluationTwo);
-  //
-  //    TensorflowEvaluator tensorflowBatchEvaluator =
-  //        new TensorflowEvaluator(TensorflowEvaluator.TIC_TAC_TOE_V1, service);
-  //
-  //    for (int i = 0; i < 1000; i++) {
-  //      tensorflowBatchEvaluator.evaluate(envelopeOne, envelopeTwo);
-  //    }
-  //
-  //    assertThat(envelopeOne.evaluation().getValue()).isWithin(TOLERANCE).of(0.3031689f);
-  //    assertThat(envelopeOne.evaluation().getPolicy())
-  //        .usingTolerance(TOLERANCE)
-  //        .containsExactly(
-  //            new float[] {
-  //              0.11732529f,
-  //              0.10184305f,
-  //              0.11379578f,
-  //              0.102521166f,
-  //              0.12674625f,
-  //              0.101940125f,
-  //              0.1172647f,
-  //              0.10257506f,
-  //              0.11598862f
-  //            })
-  //        .inOrder();
-  //  }
-  //
-  //  @Test
-  //  public void shouldEvaluateCorrectlyConnect4() {
-  //    TensorflowEvaluator tensorflowBatchEvaluator =
-  //        new TensorflowEvaluator<>(TensorflowEvaluator.CONNECT4_V1, Connect4Service.INSTANCE);
-  //
-  //    Connect4 game1 = Connect4Service.INSTANCE.newInitialState();
-  //    Connect4 game2 = Connect4Service.INSTANCE.newInitialState();
-  //    game2.move(3);
-  //    Connect4 game3 = Connect4Service.INSTANCE.newInitialState();
-  //    game3.move(3);
-  //    game3.move(3);
-  //    game3.move(2);
-  //    game3.move(3);
-  //    game3.move(1);
-  //
-  //    EvaluatedGameState node1 = EvaluatedGameStateEnvelope.create(game1, new StateEvaluation(7));
-  //    EvaluatedGameState node2 = EvaluatedGameStateEnvelope.create(game2, new StateEvaluation(7));
-  //    EvaluatedGameStateEnvelope node3 =
-  //        EvaluatedGameStateEnvelope.create(game3, new StateEvaluation(7));
-  //
-  //    Stopwatch stopwatch = Stopwatch.createStarted();
-  //    logger.info("Start");
-  //    tensorflowBatchEvaluator.evaluate(node1, null, node3);
-  //    tensorflowBatchEvaluator.evaluate(node2, null);
-  //    logger.info("End: " + stopwatch.stop());
-  //
-  //    assertThat(node1.evaluation().getValue()).isWithin(TOLERANCE).of(0.21751882f);
-  //    assertThat(node1.evaluation().getPolicy())
-  //        .usingTolerance(TOLERANCE)
-  //        .containsExactly(
-  //            0.11898205, 0.14070407, 0.1519281, 0.1711144, 0.15199628, 0.14285956, 0.12241552)
-  //        .inOrder();
-  //
-  //    assertThat(node2.evaluation().getValue()).isWithin(TOLERANCE).of(-0.28411743f);
-  //    assertThat(node2.evaluation().getPolicy())
-  //        .usingTolerance(TOLERANCE)
-  //        .containsExactly(
-  //            0.10639307, 0.14400896, 0.16923025, 0.16191941, 0.16771331, 0.13361344, 0.1171216)
-  //        .inOrder();
-  //
-  //    assertThat(node3.evaluation().getValue()).isWithin(TOLERANCE).of(-0.90172696f);
-  //    assertThat(node3.evaluation().getPolicy())
-  //        .usingTolerance(TOLERANCE)
-  //        .containsExactly(
-  //            0.15628283, 0.0015531139, 0.0010194125, 0.6490803, 0.19007017, 9.985811E-4,
-  // 9.955459E-4)
-  //        .inOrder();
-  //  }
+
+  @Test
+  public void evaluateManyTimesCorrectly() {
+    TicTacToe stateOne = new TicTacToe();
+    TicTacToe stateTwo = stateOne.move(4);
+
+    StateEvaluation evaluationOne = new StateEvaluation(TicTacToe.NUM_MOVES);
+    StateEvaluation evaluationTwo = new StateEvaluation(TicTacToe.NUM_MOVES);
+
+    EvaluatedGameState envelopeOne = EvaluatedGameStateEnvelope.create(stateOne, evaluationOne);
+    EvaluatedGameState envelopeTwo = EvaluatedGameStateEnvelope.create(stateTwo, evaluationTwo);
+
+    TensorflowEvaluator tensorflowBatchEvaluator =
+        new TensorflowEvaluator(
+            TensorflowEvaluator.TIC_TAC_TOE_V1, new NumberOfMoves(TicTacToe.NUM_MOVES), new NumberOfFeatures(TicTacToe.NUM_MOVES));
+
+    for (int i = 0; i < 1000; i++) {
+      tensorflowBatchEvaluator.evaluate(envelopeOne, envelopeTwo);
+    }
+
+    assertThat(envelopeOne.evaluation().getValue()).isWithin(TOLERANCE).of(0.3031689f);
+    assertThat(envelopeOne.evaluation().getPolicy())
+        .usingTolerance(TOLERANCE)
+        .containsExactly(
+            new float[] {
+              0.11732529f,
+              0.10184305f,
+              0.11379578f,
+              0.102521166f,
+              0.12674625f,
+              0.101940125f,
+              0.1172647f,
+              0.10257506f,
+              0.11598862f
+            })
+        .inOrder();
+  }
+
+  @Test
+  public void shouldEvaluateCorrectlyConnect4() {
+    Connect4 game1 = new Connect4();
+    Connect4 game2 = game1.move(3);
+
+    Connect4 game3 = game1.move(3).move(3).move(2).move(3).move(1);
+
+    TensorflowEvaluator tensorflowBatchEvaluator =
+        new TensorflowEvaluator(
+            TensorflowEvaluator.CONNECT4_V1, new NumberOfMoves(Connect4.NUM_MOVES), new NumberOfFeatures(Connect4.NUM_FEATURES));
+
+    EvaluatedGameState node1 = EvaluatedGameStateEnvelope.create(game1, new StateEvaluation(Connect4.NUM_MOVES));
+    EvaluatedGameState node2 = EvaluatedGameStateEnvelope.create(game2, new StateEvaluation(Connect4.NUM_MOVES));
+    EvaluatedGameStateEnvelope node3 =
+        EvaluatedGameStateEnvelope.create(game3, new StateEvaluation(Connect4.NUM_MOVES));
+
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    logger.info("Start");
+    tensorflowBatchEvaluator.evaluate(node1, null, node3);
+    tensorflowBatchEvaluator.evaluate(node2, null);
+    logger.info("End: " + stopwatch.stop());
+
+    assertThat(node1.evaluation().getValue()).isWithin(TOLERANCE).of(0.21751882f);
+    assertThat(node1.evaluation().getPolicy())
+        .usingTolerance(TOLERANCE)
+        .containsExactly(
+            0.11898205, 0.14070407, 0.1519281, 0.1711144, 0.15199628, 0.14285956, 0.12241552)
+        .inOrder();
+
+    assertThat(node2.evaluation().getValue()).isWithin(TOLERANCE).of(-0.28411743f);
+    assertThat(node2.evaluation().getPolicy())
+        .usingTolerance(TOLERANCE)
+        .containsExactly(
+            0.10639307, 0.14400896, 0.16923025, 0.16191941, 0.16771331, 0.13361344, 0.1171216)
+        .inOrder();
+
+    assertThat(node3.evaluation().getValue()).isWithin(TOLERANCE).of(-0.90172696f);
+    assertThat(node3.evaluation().getPolicy())
+        .usingTolerance(TOLERANCE)
+        .containsExactly(
+            0.15628283, 0.0015531139, 0.0010194125, 0.6490803, 0.19007017, 9.985811E-4, 9.955459E-4)
+        .inOrder();
+  }
 }

@@ -12,11 +12,11 @@ class ZeroValueUniformEvaluatorTest {
   @Test
   void shouldEvaluateRoot() {
     TicTacToe root = new TicTacToe();
-    StateEvaluation evaluation = new StateEvaluation(9);
+    StateEvaluation evaluation = new StateEvaluation(TicTacToe.NUM_MOVES);
 
     EvaluatedGameState envelope = EvaluatedGameStateEnvelope.create(root, evaluation);
 
-    ZeroValueUniformEvaluator evaluator = new ZeroValueUniformEvaluator(9);
+    ZeroValueUniformEvaluator evaluator = new ZeroValueUniformEvaluator(TicTacToe.NUM_MOVES);
     evaluator.evaluate(envelope);
 
     assertThat(evaluation.getValue()).isZero();
@@ -31,11 +31,11 @@ class ZeroValueUniformEvaluatorTest {
 
     TicTacToe root = new TicTacToe();
     root.move(4);
-    StateEvaluation evaluation = new StateEvaluation(9);
+    StateEvaluation evaluation = new StateEvaluation(TicTacToe.NUM_MOVES);
 
     EvaluatedGameState envelope = EvaluatedGameStateEnvelope.create(root, evaluation);
 
-    ZeroValueUniformEvaluator evaluator = new ZeroValueUniformEvaluator(9);
+    ZeroValueUniformEvaluator evaluator = new ZeroValueUniformEvaluator(TicTacToe.NUM_MOVES);
     evaluator.evaluate(envelope);
 
     assertThat(evaluation.getValue()).isZero();

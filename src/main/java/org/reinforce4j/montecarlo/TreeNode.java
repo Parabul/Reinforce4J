@@ -1,8 +1,10 @@
 package org.reinforce4j.montecarlo;
 
 import com.google.common.base.MoreObjects;
+import java.util.Optional;
 import org.reinforce4j.core.*;
 import org.reinforce4j.evaluation.EvaluatedGameState;
+import org.reinforce4j.evaluation.Evaluator;
 import org.reinforce4j.evaluation.StateEvaluation;
 import org.reinforce4j.utils.tfrecord.TensorFlowUtils;
 import org.tensorflow.example.Example;
@@ -12,15 +14,13 @@ public class TreeNode implements EvaluatedGameState {
 
   private final GameState state;
   private final StateEvaluation evaluation;
-
-  // Array of child state, has size `num_moves`. Unreachable states (moves not allowed) are
-  // populated with zeros.
-  private final TreeNode[] childStates;
-
-  // Total value of all nodes reached through this node.
+  // Average value of all nodes reached through this node.
   private final AverageValue averageValue;
-  // Outcomes observed:
+  // Outcomes observed.
   private final Outcomes outcomes;
+  // Array of child state, has size `num_moves`. Unreachable states (moves not allowed) are
+  // populated with nulls.
+  private final TreeNode[] childStates;
   // True when visited and not pruned.
   private boolean initialized = false;
 
@@ -30,6 +30,42 @@ public class TreeNode implements EvaluatedGameState {
     this.childStates = new TreeNode[numMoves];
     this.averageValue = new AverageValue();
     this.outcomes = new Outcomes();
+  }
+
+  public void update(Player winner, AverageValue averageValue) {
+    this.outcomes.addWinner(winner);
+    this.averageValue.add(averageValue);
+  }
+
+  /** Initializes child states and evaluates using provided evaluator. */
+  public Optional<AverageValue> initChildren(Evaluator evaluator) {
+    int numberOfMoves = evaluation().getNumberOfMoves();
+    if (isInitialized()) {
+      return Optional.empty();
+    }
+    initialized = true;
+    for (int move = 0; move < numberOfMoves; move++) {
+      if (!state().isMoveAllowed(move)) {
+        continue;
+      }
+      getChildStates()[move] = new TreeNode(state().move(move), numberOfMoves);
+    }
+
+    evaluator.evaluate(getChildStates());
+
+    AverageValue childrenAverageValue = new AverageValue();
+    for (int move = 0; move < numberOfMoves; move++) {
+      if (!state().isMoveAllowed(move)) {
+        continue;
+      }
+      TreeNode childNode = getChildStates()[move];
+      childNode
+          .getAverageValue()
+          .fromEvaluation(childNode.state().getCurrentPlayer(), childNode.evaluation().getValue());
+      childrenAverageValue.add(childNode.getAverageValue());
+    }
+
+    return Optional.of(childrenAverageValue);
   }
 
   @Override
@@ -54,17 +90,8 @@ public class TreeNode implements EvaluatedGameState {
     return averageValue;
   }
 
-  public void update(Player winner, AverageValue averageValue) {
-    this.outcomes.addWinner(winner);
-    this.averageValue.add(averageValue);
-  }
-
   public boolean isInitialized() {
     return initialized;
-  }
-
-  public void setInitialized(boolean initialized) {
-    this.initialized = initialized;
   }
 
   public boolean isLeaf() {

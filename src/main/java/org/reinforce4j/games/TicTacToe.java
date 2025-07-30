@@ -16,6 +16,9 @@ public class TicTacToe implements GameState {
   private final boolean isGameOver;
   private final Player winner;
 
+  public static final int NUM_MOVES = 9;
+  public static final int NUM_FEATURES = 9;
+
   public TicTacToe() {
     this(new byte[SIZE][SIZE], Player.ONE, false, null);
   }

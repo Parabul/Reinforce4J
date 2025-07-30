@@ -6,11 +6,12 @@ import org.reinforce4j.core.GameState;
 import org.reinforce4j.core.Player;
 
 public class Connect4 implements GameState {
+  public static final int NUM_MOVES = 7;
+  public static final int NUM_FEATURES = 42;
   private static final int ROWS = 6;
   private static final int COLS = 7;
   private static final byte PLAYER_ONE_VALUE = (byte) 1;
   private static final byte PLAYER_TWO_VALUE = (byte) -1;
-
   private final byte[][] board = new byte[ROWS][COLS];
   private final Player currentPlayer;
   private final boolean isGameOver;
