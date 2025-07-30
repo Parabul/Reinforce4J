@@ -1,16 +1,14 @@
 package org.reinforce4j.montecarlo;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.*;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.reinforce4j.evaluation.batch.BatchEvaluatorModule;
@@ -30,8 +28,8 @@ public class MonteCarloTreeSearchModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(ExpansionStrategy.class).to(PredictiveUpperConfidenceBoundExpansionStrategy.class);
-    bind(ListeningExecutorService.class)
-        .toInstance(MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(50)));
+    bind(ExecutorService.class).annotatedWith(ExpansionWorkers.class)
+        .toInstance(Executors.newFixedThreadPool(50));
 
     install(new FactoryModuleBuilder().build(ExpandTaskFactory.class));
     install(new BatchEvaluatorModule());
@@ -40,12 +38,17 @@ public class MonteCarloTreeSearchModule extends AbstractModule {
   @Provides
   @Singleton
   @ExpandedNodes
-  public List<Example> provideExpandedNodes() {
-    return Collections.synchronizedList(new ArrayList<>());
+  public Queue<Example> provideExpandedNodes() {
+    return new ConcurrentLinkedQueue<>();
   }
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
   @BindingAnnotation
   public @interface ExpandedNodes {}
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
+  @BindingAnnotation
+  public @interface ExpansionWorkers {}
 }

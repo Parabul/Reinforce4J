@@ -6,7 +6,7 @@ import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.ExecutionException;
 import org.reinforce4j.constants.NumberOfExpansionsPerNode;
 import org.reinforce4j.constants.NumberOfNodesToExpand;
@@ -46,7 +46,8 @@ public class Connect4ReinforcementLearningPipeline {
                   install(new MonteCarloTreeSearchModule());
                   bind(Evaluator.class)
                       .annotatedWith(BatchEvaluatorModule.BatchEvaluatorDelegate.class)
-                      .toInstance(new GameOverEvaluator(new ZeroValueUniformEvaluator(Connect4.NUM_MOVES)));
+                      .toInstance(
+                          new GameOverEvaluator(new ZeroValueUniformEvaluator(Connect4.NUM_MOVES)));
                 }
 
                 @Provides
@@ -62,7 +63,7 @@ public class Connect4ReinforcementLearningPipeline {
                 }
               });
       TreeSearch treeSearch = injector.getInstance(TreeSearch.class);
-      List<Example> examples = treeSearch.explore(new Connect4());
+      Queue<Example> examples = treeSearch.explore(new Connect4());
 
       DataOutputStream outputStream =
           new DataOutputStream(new FileOutputStream(BASE_PATH + "training-" + i + ".tfrecord"));
@@ -94,7 +95,7 @@ public class Connect4ReinforcementLearningPipeline {
 
       Injector injector = Guice.createInjector(new MonteCarloTreeSearchModule());
       TreeSearch treeSearch = injector.getInstance(TreeSearch.class);
-      List<Example> examples = treeSearch.explore(new Connect4());
+      Queue<Example> examples = treeSearch.explore(new Connect4());
 
       DataOutputStream outputStream =
           new DataOutputStream(new FileOutputStream(BASE_PATH + "training-" + i + ".tfrecord"));

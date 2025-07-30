@@ -1,12 +1,9 @@
 package org.reinforce4j.montecarlo.tasks;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.math3.util.Pair;
 import org.reinforce4j.constants.NumberOfExpansionsPerNode;
@@ -31,11 +28,11 @@ public class ExpandTask implements Runnable {
   private final ExpandTaskFactory expandTaskFactory;
   private final ExpansionStrategy expansionStrategy;
   private final BatchClientEvaluator evaluator;
-  private final ListeningExecutorService executor;
+  private final ExecutorService executor;
 
   private final GameState currentState;
   private final AtomicInteger completeExpansions;
-  private final List<Example> expandedNodes;
+  private final Queue<Example> expandedNodes;
   private final int numberOfMoves;
   private final int numberOfExpansionsPerNode;
   private final int numberOfNodesToExpand;
@@ -49,13 +46,12 @@ public class ExpandTask implements Runnable {
       ExpansionStrategy expansionStrategy,
       BatchClientEvaluator evaluator,
       AtomicInteger completeExpansions,
-      ListeningExecutorService executor,
-      @MonteCarloTreeSearchModule.ExpandedNodes List<Example> expandedNodes,
+      @MonteCarloTreeSearchModule.ExpansionWorkers ExecutorService executor,
+      @MonteCarloTreeSearchModule.ExpandedNodes Queue<Example> expandedNodes,
       @Assisted GameState gameState) {
     this.currentState = gameState;
     this.numberOfExpansionsPerNode = numberOfExpansionsPerNode.value();
     this.numberOfNodesToExpand = numberOfNodesToExpand.value();
-
     this.numberOfMoves = numberOfMoves.value();
     this.expandTaskFactory = expandTaskFactory;
     this.completeExpansions = completeExpansions;
@@ -74,7 +70,7 @@ public class ExpandTask implements Runnable {
         expand(currentNode);
       }
 
-      expandedNodes.add(currentNode.toExample());
+      expandedNodes.offer(currentNode.toExample());
       int expansions = completeExpansions.incrementAndGet();
       if (expansions % 10 == 1) {
         logger.info("Complete expansions {}", expansions);

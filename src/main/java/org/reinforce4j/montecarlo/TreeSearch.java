@@ -2,8 +2,9 @@ package org.reinforce4j.montecarlo;
 
 import com.google.common.util.concurrent.*;
 import com.google.inject.Inject;
-import java.time.Duration;
-import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import org.reinforce4j.core.GameState;
 import org.reinforce4j.montecarlo.tasks.ExpandTaskFactory;
 import org.tensorflow.example.Example;
@@ -11,22 +12,22 @@ import org.tensorflow.example.Example;
 public class TreeSearch {
 
   private final ExpandTaskFactory expandTaskFactory;
-  private final ListeningExecutorService executor;
-  private final List<Example> expandedNodes;
+  private final ExecutorService executor;
+  private final Queue<Example> expandedNodes;
 
   @Inject
   public TreeSearch(
       ExpandTaskFactory expandTaskFactory,
-      ListeningExecutorService executor,
-      @MonteCarloTreeSearchModule.ExpandedNodes List<Example> expandedNodes) {
+      @MonteCarloTreeSearchModule.ExpansionWorkers ExecutorService executor,
+      @MonteCarloTreeSearchModule.ExpandedNodes Queue<Example> expandedNodes) {
     this.expandTaskFactory = expandTaskFactory;
     this.executor = executor;
     this.expandedNodes = expandedNodes;
   }
 
-  public List<Example> explore(final GameState root) throws InterruptedException {
+  public Queue<Example> explore(final GameState root) throws InterruptedException {
     executor.submit(expandTaskFactory.create(root));
-    executor.awaitTermination(Duration.ofMinutes(150));
+    executor.awaitTermination(150, TimeUnit.MINUTES);
 
     return expandedNodes;
   }

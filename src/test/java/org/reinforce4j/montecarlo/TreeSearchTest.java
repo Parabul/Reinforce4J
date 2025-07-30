@@ -5,7 +5,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.truth.Correspondence;
 import com.google.inject.*;
 import java.io.IOException;
-import java.util.List;
+import java.util.Queue;
 import org.junit.Test;
 import org.reinforce4j.constants.NumberOfExpansionsPerNode;
 import org.reinforce4j.constants.NumberOfFeatures;
@@ -55,7 +55,7 @@ public class TreeSearchTest {
             });
     TreeSearch treeSearch = injector.getInstance(TreeSearch.class);
 
-    List<Example> examples = treeSearch.explore(new TicTacToe());
+    Queue<Example> examples = treeSearch.explore(new TicTacToe());
 
     TicTacToe state = (new TicTacToe()).move(4).move(1).move(0).move(2);
 
@@ -118,7 +118,7 @@ public class TreeSearchTest {
             });
     TreeSearch treeSearch = injector.getInstance(TreeSearch.class);
 
-    List<Example> examples = treeSearch.explore(new Connect4());
+    Queue<Example> examples = treeSearch.explore(new Connect4());
 
     assertThat(examples.size()).isAtLeast(100);
 
@@ -170,7 +170,7 @@ public class TreeSearchTest {
             });
     TreeSearch treeSearch = injector.getInstance(TreeSearch.class);
 
-    List<Example> examples = treeSearch.explore(new Connect4());
+    Queue<Example> examples = treeSearch.explore(new Connect4());
 
     //    assertThat(examples.size()).isGreaterThan(10000);
 

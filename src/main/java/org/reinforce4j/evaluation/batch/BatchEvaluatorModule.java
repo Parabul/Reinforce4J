@@ -15,9 +15,6 @@ import java.util.concurrent.Executors;
 import org.reinforce4j.evaluation.Evaluator;
 
 public class BatchEvaluatorModule extends AbstractModule {
-  //    final BlockingQueue<Request> requestQueue = new LinkedBlockingQueue<>();
-  //    final ExecutorService workerPool = Executors.newFixedThreadPool(NUM_THREADS);
-  //    final ExecutorService batchExecutor = Executors.newSingleThreadExecutor();
 
   @Override
   protected void configure() {
