@@ -78,31 +78,29 @@ public class PredictiveUpperConfidenceBoundExpansionStrategyTest {
 
   @Test
   public void suggestMoveWithHigherPriors() {
-    int numMoves = 9;
-
-    Evaluator evaluator = new GameOverEvaluator(new ZeroValueUniformEvaluator(numMoves));
+    Evaluator evaluator = new GameOverEvaluator(new ZeroValueUniformEvaluator(TicTacToe.NUM_MOVES));
     PredictiveUpperConfidenceBoundExpansionStrategy nodeSelectionStrategy =
-        new PredictiveUpperConfidenceBoundExpansionStrategy(new NumberOfMoves(numMoves));
+        new PredictiveUpperConfidenceBoundExpansionStrategy(new NumberOfMoves(TicTacToe.NUM_MOVES));
 
-    int[] histogram = new int[numMoves];
+    int[] histogram = new int[TicTacToe.NUM_MOVES];
     int times = 1_000_000;
 
-    TreeNode treeNode = new TreeNode(new TicTacToe(), numMoves);
+    TreeNode treeNode = new TreeNode(new TicTacToe(), TicTacToe.NUM_MOVES);
     treeNode.initChildren(evaluator);
 
     treeNode.evaluation().setValue(0.0f);
     float[] priors = new float[] {0.2f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f};
 
-    System.arraycopy(priors, 0, treeNode.evaluation().getPolicy(), 0, numMoves);
+    System.arraycopy(priors, 0, treeNode.evaluation().getPolicy(), 0, TicTacToe.NUM_MOVES);
 
     for (int i = 0; i < times; i++) {
 
       histogram[nodeSelectionStrategy.suggestMove(treeNode)]++;
     }
 
-    float[] dist = new float[numMoves];
+    float[] dist = new float[TicTacToe.NUM_MOVES];
 
-    for (int i = 0; i < numMoves; i++) {
+    for (int i = 0; i < TicTacToe.NUM_MOVES; i++) {
       dist[i] = 1.0f * histogram[i] / times;
     }
 

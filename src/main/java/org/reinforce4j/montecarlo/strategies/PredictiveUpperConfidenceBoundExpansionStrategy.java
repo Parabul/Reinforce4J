@@ -23,11 +23,9 @@ public class PredictiveUpperConfidenceBoundExpansionStrategy implements Expansio
       LoggerFactory.getLogger(PredictiveUpperConfidenceBoundExpansionStrategy.class);
 
   private final DirichletSampler dirichlet;
-  private final int numberOfMoves;
 
   @Inject
   public PredictiveUpperConfidenceBoundExpansionStrategy(NumberOfMoves numberOfMoves) {
-    this.numberOfMoves = numberOfMoves.value();
     this.dirichlet =
         DirichletSampler.symmetric(
             RandomSource.XO_RO_SHI_RO_128_PP.create(), numberOfMoves.value(), 1);
@@ -48,7 +46,7 @@ public class PredictiveUpperConfidenceBoundExpansionStrategy implements Expansio
 
     float max = -Float.MAX_VALUE;
     int indexOfMax = -1;
-    float[] values = new float[numberOfMoves];
+    float[] values = new float[treeNode.evaluation().getNumberOfMoves()];
 
     double parentVisitsSqrt = Math.sqrt(1 + treeNode.getVisits());
 

@@ -19,6 +19,7 @@ public class BatchEvaluator implements Runnable {
 
   private final BlockingQueue<BatchEvaluationRequest> queue;
   private final Evaluator evaluator;
+  private int observedMaxBatchSize = 0;
 
   public BatchEvaluator(BlockingQueue<BatchEvaluationRequest> queue, Evaluator evaluator) {
     this.queue = queue;
@@ -34,6 +35,10 @@ public class BatchEvaluator implements Runnable {
 
         List<BatchEvaluationRequest> batch = new ArrayList<>();
         queue.drainTo(batch, BATCH_SIZE);
+        if (batch.size() > observedMaxBatchSize) {
+          observedMaxBatchSize = batch.size();
+          logger.info("New max batch size is {}", observedMaxBatchSize);
+        }
 
         if (!batch.isEmpty()) {
           if (batch.size() == BATCH_SIZE) {

@@ -19,13 +19,19 @@ public class BatchOnnxEvaluator implements Evaluator {
   private final int numberOfFeatures;
 
   @Inject
-  public BatchOnnxEvaluator(String modelPath, NumberOfFeatures numberOfFeatures) {
+  public BatchOnnxEvaluator(
+      String modelPath, NumberOfFeatures numberOfFeatures, boolean gpuEnabled) {
     this.numberOfFeatures = numberOfFeatures.value();
     env = OrtEnvironment.getEnvironment();
     OrtSession.SessionOptions sessionOptions = new OrtSession.SessionOptions();
     try {
+      if (gpuEnabled) {
+        sessionOptions.addTensorrt(0);
+      } else {
+        sessionOptions.addCPU(true);
+      }
       //    sessionOptions.addCUDA(0);
-      sessionOptions.addTensorrt(0);
+      //
       session = env.createSession(modelPath, sessionOptions);
     } catch (OrtException e) {
       throw new RuntimeException(e);
@@ -35,7 +41,6 @@ public class BatchOnnxEvaluator implements Evaluator {
   @Override
   public void evaluate(EvaluatedGameState... nodes) {
     try {
-
       float[] batch = new float[nodes.length * numberOfFeatures];
       FloatBuffer buffer = FloatBuffer.wrap(batch);
       long[] shape = new long[] {nodes.length, numberOfFeatures};

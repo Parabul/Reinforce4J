@@ -10,16 +10,13 @@ import org.reinforce4j.constants.NumberOfMoves;
 public class OnnxEvaluator implements Evaluator {
 
   public static final String CONNECT4_V0 =
-      TensorflowEvaluator.class.getResource("/onnx/models/connect4_model_v0.onnx").getPath();
-
-  public static final String CONNECT4_V1 =
       TensorflowEvaluator.class.getResource("/onnx/models/connect4_v0.onnx").getPath();
 
-  public static final String CONNECT4_V2 =
+  public static final String CONNECT4_V1 =
       TensorflowEvaluator.class.getResource("/onnx/models/connect4_v1.onnx").getPath();
 
-  public static final String CONNECT4_ALT_V0 =
-      TensorflowEvaluator.class.getResource("/onnx/models/connect4_alt_v0.onnx").getPath();
+  public static final String TIC_TAC_TOE_V0 =
+          TensorflowEvaluator.class.getResource("/onnx/models/tic_tac_toe_v0.onnx").getPath();
 
   private static final String INPUT = "input_1";
   private static final String VALUE_OUTPUT = "value_output";

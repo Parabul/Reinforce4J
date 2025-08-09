@@ -42,7 +42,7 @@ def decode_fn(record_bytes):
 # Load the dataset
 files = tf.data.Dataset.list_files(args.Input)
 files = list(files.as_numpy_iterator())
-decoded_training_dataset = tf.data.TFRecordDataset(files).map(decode_fn).batch(512)
+decoded_training_dataset = tf.data.TFRecordDataset(files).map(decode_fn).batch(32)
 
 # Define the model architecture
 input_layer = layers.Input(shape=(9,), name = "input_1")
@@ -51,13 +51,12 @@ input_layer = layers.Input(shape=(9,), name = "input_1")
 hidden_layer1 = layers.Dense(128, activation='relu')(input_layer)
 hidden_layer2 = layers.Dense(128, activation='relu')(hidden_layer1)
 hidden_layer3 = layers.Dense(128, activation='relu')(hidden_layer2)
-hidden_layer4 = layers.Dense(128, activation='relu')(hidden_layer3)
 
 # Value output (1 neuron)
-value_output = layers.Dense(1, activation='tanh', name='value_output')(hidden_layer4)
+value_output = layers.Dense(1, activation='tanh', name='value_output')(hidden_layer3)
 
 # Policy output (9 neurons, one for each possible move)
-policy_output = layers.Dense(9, activation='sigmoid', name='policy_output')(hidden_layer4)
+policy_output = layers.Dense(9, activation='softmax', name='policy_output')(hidden_layer3)
 
 # Create the model
 model = models.Model(inputs=input_layer, outputs={'value_output':value_output, 'policy_output':policy_output})
@@ -70,7 +69,7 @@ model.compile(optimizer=optimizers.Adam(learning_rate=0.001),
 model.summary()
 
 # Early stopping callback
-callback = callbacks.EarlyStopping(monitor='loss', min_delta=0.00001, patience=15)
+callback = callbacks.EarlyStopping(monitor='loss', min_delta=0.00001, patience=3)
 
 # Train the model
 model.fit(decoded_training_dataset, callbacks=[callback], epochs=15)

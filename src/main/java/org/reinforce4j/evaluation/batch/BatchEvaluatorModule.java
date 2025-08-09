@@ -38,8 +38,8 @@ public class BatchEvaluatorModule extends AbstractModule {
   @Singleton
   @Provides
   BatchEvaluator provideBatchEvaluator(
-      @BatchEvaluatorModule.BatchEvaluatorRequestQueue BlockingQueue<BatchEvaluationRequest> queue,
-      @BatchEvaluatorModule.BatchEvaluatorDelegate Evaluator evaluator,
+      @BatchEvaluatorRequestQueue BlockingQueue<BatchEvaluationRequest> queue,
+      @BatchEvaluatorDelegate Evaluator evaluator,
       @BatchEvaluatorExecutor ExecutorService executor) {
     BatchEvaluator batchEvaluator = new BatchEvaluator(queue, evaluator);
     executor.submit(batchEvaluator);

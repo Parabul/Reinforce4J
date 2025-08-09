@@ -3,15 +3,14 @@ package org.reinforce4j.montecarlo.tasks;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.math3.util.Pair;
 import org.reinforce4j.constants.NumberOfExpansionsPerNode;
 import org.reinforce4j.constants.NumberOfMoves;
-import org.reinforce4j.constants.NumberOfNodesToExpand;
 import org.reinforce4j.core.GameState;
 import org.reinforce4j.core.Player;
-import org.reinforce4j.evaluation.batch.BatchClientEvaluator;
+import org.reinforce4j.evaluation.Evaluator;
 import org.reinforce4j.montecarlo.AverageValue;
 import org.reinforce4j.montecarlo.MonteCarloTreeSearchModule;
 import org.reinforce4j.montecarlo.TreeNode;
@@ -27,38 +26,36 @@ public class ExpandTask implements Runnable {
 
   private final ExpandTaskFactory expandTaskFactory;
   private final ExpansionStrategy expansionStrategy;
-  private final BatchClientEvaluator evaluator;
+  private final Evaluator evaluator;
   private final ExecutorService executor;
 
   private final GameState currentState;
-  private final AtomicInteger completeExpansions;
   private final Queue<Example> expandedNodes;
   private final int numberOfMoves;
   private final int numberOfExpansionsPerNode;
-  private final int numberOfNodesToExpand;
+  private final CountDownLatch expansionsRemaining;
 
   @AssistedInject
   ExpandTask(
       NumberOfMoves numberOfMoves,
       NumberOfExpansionsPerNode numberOfExpansionsPerNode,
-      NumberOfNodesToExpand numberOfNodesToExpand,
       ExpandTaskFactory expandTaskFactory,
       ExpansionStrategy expansionStrategy,
-      BatchClientEvaluator evaluator,
-      AtomicInteger completeExpansions,
+      @MonteCarloTreeSearchModule.DefaultEvaluator Evaluator evaluator,
       @MonteCarloTreeSearchModule.ExpansionWorkers ExecutorService executor,
       @MonteCarloTreeSearchModule.ExpandedNodes Queue<Example> expandedNodes,
-      @Assisted GameState gameState) {
-    this.currentState = gameState;
-    this.numberOfExpansionsPerNode = numberOfExpansionsPerNode.value();
-    this.numberOfNodesToExpand = numberOfNodesToExpand.value();
+      @Assisted GameState gameState,
+      @Assisted CountDownLatch expansionsRemaining) {
+
     this.numberOfMoves = numberOfMoves.value();
+    this.numberOfExpansionsPerNode = numberOfExpansionsPerNode.value();
     this.expandTaskFactory = expandTaskFactory;
-    this.completeExpansions = completeExpansions;
+    this.expansionsRemaining = expansionsRemaining;
     this.executor = executor;
     this.expansionStrategy = expansionStrategy;
     this.evaluator = evaluator;
     this.expandedNodes = expandedNodes;
+    this.currentState = gameState;
   }
 
   @Override
@@ -71,17 +68,17 @@ public class ExpandTask implements Runnable {
       }
 
       expandedNodes.offer(currentNode.toExample());
-      int expansions = completeExpansions.incrementAndGet();
-      if (expansions % 10 == 1) {
-        logger.info("Complete expansions {}", expansions);
+      expansionsRemaining.countDown();
+      long expansionsLeft = expansionsRemaining.getCount();
+      if (expansionsLeft % 10 == 0) {
+        logger.info("Remaining expansions {}", expansionsLeft);
+        logger.info(executor.toString());
       }
-      if (expansions > numberOfNodesToExpand) {
-        if (!executor.isShutdown()) {
-          logger.warn("--------------------------------------------------------");
-          logger.info("Shutdown. No longer accepting expansions");
-          logger.warn("--------------------------------------------------------");
-          executor.shutdownNow();
-        }
+      if (expansionsLeft < 1) {
+        logger.warn("--------------------------------------------------------");
+        logger.warn("No longer accepting expansions!");
+        logger.warn("--------------------------------------------------------");
+
         return;
       }
 
@@ -92,7 +89,10 @@ public class ExpandTask implements Runnable {
         if (child.state().isGameOver()) {
           continue;
         }
-        executor.submit(expandTaskFactory.create(child.state()));
+        expandedNodes.offer(child.toExample());
+        if (Math.random() < 0.5) {
+          executor.submit(expandTaskFactory.create(child.state(), expansionsRemaining));
+        }
       }
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
