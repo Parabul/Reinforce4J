@@ -26,14 +26,14 @@ public class EvaluatorsComparatorTest {
     assertThat(evaluatorsComparator.candidateIsBetter(incumbent, incumbent)).isFalse();
   }
 
-  //  @Test
+  @Test
   public void nnEvaluatorBetterThanRandom() {
     EvaluatorsComparator evaluatorsComparator =
         new EvaluatorsComparator(new NumberOfMoves(Connect4.NUM_MOVES), Connect4::new);
     Evaluator incumbent = new ZeroValueUniformEvaluator(TicTacToe.NUM_MOVES);
     Evaluator candidate =
         new OnnxEvaluator(
-            OnnxEvaluator.CONNECT4_V1,
+            OnnxEvaluator.CONNECT4_V0,
             new NumberOfFeatures(Connect4.NUM_FEATURES),
             new NumberOfMoves(Connect4.NUM_MOVES));
     assertThat(evaluatorsComparator.candidateIsBetter(incumbent, candidate)).isTrue();
@@ -63,7 +63,7 @@ public class EvaluatorsComparatorTest {
     Evaluator incumbent =
         new GameOverEvaluator(
             new OnnxEvaluator(
-                    "/home/anarbek/tmp/connect4/20250804/connect_v0.onnx",
+                "/home/anarbek/tmp/connect4/20250804/connect_v0.onnx",
                 new NumberOfFeatures(Connect4.NUM_FEATURES),
                 new NumberOfMoves(Connect4.NUM_MOVES)));
 

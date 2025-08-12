@@ -257,7 +257,7 @@ public class TreeSearchTest {
         assertThat(
                 example.getFeatures().getFeatureMap().get("output").getFloatList().getValueList())
             .comparingElementsUsing(Correspondence.tolerance(0.1))
-            .containsExactly(0.0030948557, 0.112, 0.109, 0.1065, 0.1095, 0.117, 0.112, 0.1105, 0.1145, 0.109).inOrder();
+            .containsExactly(0.0030948557, 0.11, 0.11, 0.11, 0.11, 0.11, 0.11, 0.110, 0.11, 0.11).inOrder();
       }
 
       if (example

@@ -43,7 +43,7 @@ public class NinePebbles implements GameState {
     specialTwo = SPECIAL_NOT_SET;
   }
 
-  public NinePebbles(
+  private NinePebbles(
       Player currentPlayer,
       byte scoreOne,
       byte scoreTwo,
