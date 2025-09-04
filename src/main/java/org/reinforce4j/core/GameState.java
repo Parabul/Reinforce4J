@@ -16,4 +16,6 @@ public interface GameState {
 
   // TODO(anarbek): Move to Encoder interface
   float[] encode();
+
+  Player getPotentialWinner();
 }

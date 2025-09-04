@@ -113,6 +113,11 @@ public class Connect4 implements GameState {
   }
 
   @Override
+  public Player getPotentialWinner() {
+    return Player.NONE;
+  }
+
+  @Override
   public Connect4 move(int col) {
     int lastRow = -1;
     byte[][] board = new byte[ROWS][COLS];

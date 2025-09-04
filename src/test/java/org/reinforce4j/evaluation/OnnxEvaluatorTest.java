@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.reinforce4j.constants.NumberOfFeatures;
 import org.reinforce4j.constants.NumberOfMoves;
 import org.reinforce4j.games.Connect4;
+import org.reinforce4j.games.NinePebbles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,14 +22,18 @@ class OnnxEvaluatorTest {
   public void shouldEvaluateCorrectlyConnect4() throws OrtException {
     OnnxEvaluator evaluator =
         new OnnxEvaluator(
-            OnnxEvaluator.CONNECT4_V1, new NumberOfFeatures(Connect4.NUM_FEATURES), new NumberOfMoves(Connect4.NUM_MOVES));
+            OnnxEvaluator.CONNECT4_V1,
+            new NumberOfFeatures(Connect4.NUM_FEATURES),
+            new NumberOfMoves(Connect4.NUM_MOVES));
 
     Connect4 game1 = new Connect4();
     Connect4 game2 = game1.move(3);
     Connect4 game3 = game2.move(3).move(2).move(3).move(1);
 
-    EvaluatedGameState node1 = EvaluatedGameStateEnvelope.create(game1, new StateEvaluation(Connect4.NUM_MOVES));
-    EvaluatedGameState node2 = EvaluatedGameStateEnvelope.create(game2, new StateEvaluation(Connect4.NUM_MOVES));
+    EvaluatedGameState node1 =
+        EvaluatedGameStateEnvelope.create(game1, new StateEvaluation(Connect4.NUM_MOVES));
+    EvaluatedGameState node2 =
+        EvaluatedGameStateEnvelope.create(game2, new StateEvaluation(Connect4.NUM_MOVES));
     EvaluatedGameStateEnvelope node3 =
         EvaluatedGameStateEnvelope.create(game3, new StateEvaluation(Connect4.NUM_MOVES));
 
@@ -58,5 +63,44 @@ class OnnxEvaluatorTest {
         .containsExactly(
             0.15628283, 0.0015531139, 0.0010194125, 0.6490803, 0.19007017, 9.985811E-4, 9.955459E-4)
         .inOrder();
+  }
+
+  @Test
+  void evaluateNinePebbles() {
+    OnnxEvaluator evaluator =
+        new OnnxEvaluator(
+            OnnxEvaluator.NINE_PEBBLES_V0,
+            new NumberOfFeatures(NinePebbles.NUM_FEATURES),
+            new NumberOfMoves(NinePebbles.NUM_MOVES));
+
+    NinePebbles game1 = new NinePebbles();
+    NinePebbles game2 = game1.move(6);
+
+    EvaluatedGameState node1 =
+        EvaluatedGameStateEnvelope.create(game1, new StateEvaluation(NinePebbles.NUM_MOVES));
+    EvaluatedGameState node2 =
+        EvaluatedGameStateEnvelope.create(game2, new StateEvaluation(NinePebbles.NUM_MOVES));
+
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    logger.info("Start");
+    evaluator.evaluate(node1, null);
+    evaluator.evaluate(node2, null);
+    logger.info("End: " + stopwatch.stop());
+
+    assertThat(node1.evaluation().getValue()).isWithin(TOLERANCE).of(-0.0016163101f);
+    assertThat(node1.evaluation().getPolicy())
+        .usingTolerance(TOLERANCE)
+        .containsExactly(
+                0.102689035, 0.05709417, 0.15461062, 0.1141636, 0.09160823, 0.11038341, 0.09901501, 0.19622673, 0.07420929)
+        .inOrder();
+
+    assertThat(node2.evaluation().getValue()).isWithin(TOLERANCE).of(-0.002835139f);
+    assertThat(node2.evaluation().getPolicy())
+        .usingTolerance(TOLERANCE)
+        .containsExactly(
+                0.11414174, 0.04821687, 0.111130424, 0.13192761, 0.110194065, 0.078821234, 0.092666365, 0.18042597, 0.13247573)
+        .inOrder();
+
+
   }
 }

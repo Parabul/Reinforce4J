@@ -1,6 +1,7 @@
 package org.reinforce4j.montecarlo;
 
 import com.google.inject.Inject;
+import java.util.Collection;
 import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -35,6 +36,18 @@ public class TreeSearch {
   public Queue<Example> explore(final GameState root) throws InterruptedException {
     CountDownLatch expansionsRemaining = new CountDownLatch(numberOfNodesToExpand);
     executor.submit(expandTaskFactory.create(root, expansionsRemaining));
+    expansionsRemaining.await();
+    executionCoordinator.reset();
+
+    return expandedNodes;
+  }
+
+  public Queue<Example> exploreAll(final Collection<? extends GameState> gameStates)
+      throws InterruptedException {
+    CountDownLatch expansionsRemaining = new CountDownLatch(gameStates.size());
+    for (GameState gameState : gameStates) {
+      executor.submit(expandTaskFactory.create(gameState, expansionsRemaining));
+    }
     expansionsRemaining.await();
     executionCoordinator.reset();
 

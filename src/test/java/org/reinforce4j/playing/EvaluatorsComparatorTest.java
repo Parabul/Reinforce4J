@@ -5,11 +5,9 @@ import static com.google.common.truth.Truth.assertThat;
 import org.junit.Test;
 import org.reinforce4j.constants.NumberOfFeatures;
 import org.reinforce4j.constants.NumberOfMoves;
-import org.reinforce4j.evaluation.Evaluator;
-import org.reinforce4j.evaluation.GameOverEvaluator;
-import org.reinforce4j.evaluation.OnnxEvaluator;
-import org.reinforce4j.evaluation.ZeroValueUniformEvaluator;
+import org.reinforce4j.evaluation.*;
 import org.reinforce4j.games.Connect4;
+import org.reinforce4j.games.NinePebbles;
 import org.reinforce4j.games.TicTacToe;
 
 public class EvaluatorsComparatorTest {
@@ -38,6 +36,25 @@ public class EvaluatorsComparatorTest {
             new NumberOfMoves(Connect4.NUM_MOVES));
     assertThat(evaluatorsComparator.candidateIsBetter(incumbent, candidate)).isTrue();
   }
+
+  @Test
+  public void nnEvaluatorBetterThanRandomNinePebbles() {
+    EvaluatorsComparator evaluatorsComparator =
+        new EvaluatorsComparator(new NumberOfMoves(NinePebbles.NUM_MOVES), NinePebbles::new);
+    Evaluator incumbent =
+            new ExtendedGameOverEvaluator(new OnnxEvaluator(
+                    "/home/anarbek/tmp/nine_pebbles_test/nine_pebbles_v0.onnx",
+                    new NumberOfFeatures(NinePebbles.NUM_FEATURES),
+                    new NumberOfMoves(NinePebbles.NUM_MOVES)));
+    Evaluator candidate =
+            new ExtendedGameOverEvaluator(new OnnxEvaluator(
+            "/home/anarbek/tmp/nine_pebbles_test/nine_pebbles_v2.onnx",
+            new NumberOfFeatures(NinePebbles.NUM_FEATURES),
+            new NumberOfMoves(NinePebbles.NUM_MOVES)));
+    assertThat(evaluatorsComparator.candidateIsBetter(incumbent, candidate)).isTrue();
+  }
+
+  //
 
   // @Test
   public void nnEvaluatorNotBetterThanSelf() {

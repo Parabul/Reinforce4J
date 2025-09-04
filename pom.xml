@@ -235,5 +235,12 @@
             <artifactId>guice-assistedinject</artifactId>
             <version>7.0.0</version>
         </dependency>
+
+        <!--   TODO(anarbek): Only needed for Mini-batch K-means, consider reimplementing if overhead is unacceptable.     -->
+        <dependency>
+            <groupId>com.edwardraff</groupId>
+            <artifactId>JSAT</artifactId>
+            <version>0.0.9</version>
+        </dependency>
     </dependencies>
 </project>

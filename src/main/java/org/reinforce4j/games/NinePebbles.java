@@ -13,13 +13,12 @@ import org.reinforce4j.core.Player;
 public class NinePebbles implements GameState {
 
   public static final int NUM_MOVES = 9;
-  public static final int NUM_FEATURES = 23;
+  public static final int NUM_FEATURES = 47;
   public static final int SPECIAL_NOT_SET = -1;
 
   private final Player currentPlayer;
   private final boolean isGameOver;
   @Nullable private final Player winner;
-
   private final byte scoreOne;
   private final byte scoreTwo;
   // -1 special cell not set
@@ -95,6 +94,14 @@ public class NinePebbles implements GameState {
     this.winner = checkWinner();
   }
 
+  public byte getScoreOne() {
+    return scoreOne;
+  }
+
+  public byte getScoreTwo() {
+    return scoreTwo;
+  }
+
   // Returns Player relevant move by cell index;
   private int moveByCell(int cell) {
     // 8 -> 0
@@ -155,7 +162,6 @@ public class NinePebbles implements GameState {
   }
 
   public NinePebbles move(int move) {
-    checkArgument(!isGameOver(), "Game over: \n %s\n", toString());
     checkArgument(isMoveAllowed(move), "The move is not allowed!");
 
     int cell = boardCell(move);
@@ -206,27 +212,27 @@ public class NinePebbles implements GameState {
         if (newCells[currentCell] == 3) {
           int possibleSpecialCellMove = moveByCell(currentCell);
 
-          if (currentPlayer != Player.ONE
+          if (currentPlayer == Player.ONE
               // Does not have special cell yet;
-              || specialOne != SPECIAL_NOT_SET
+              && specialOne == SPECIAL_NOT_SET
               // 9th (most right cell) can not be special;
-              || possibleSpecialCellMove == 8
+              && possibleSpecialCellMove != 8
               // Can not mirror opponent's special
-              || specialTwo == SPECIAL_NOT_SET
-              || possibleSpecialCellMove != moveByCell(specialTwo)) {
+              && (specialTwo == SPECIAL_NOT_SET
+                  || possibleSpecialCellMove != moveByCell(specialTwo))) {
             newScoreOne += 3;
             newCells[currentCell] = 0;
             newSpecialOne = (byte) currentCell;
           }
 
-          if (currentPlayer != Player.TWO
+          if (currentPlayer == Player.TWO
               // Does not have special cell yet;
-              || specialTwo != SPECIAL_NOT_SET
+              && specialTwo == SPECIAL_NOT_SET
               // 9th (most right cell) can not be special;
-              || possibleSpecialCellMove == 8
+              && possibleSpecialCellMove != 8
               // Can not mirror opponent's special
-              || specialOne == SPECIAL_NOT_SET
-              || possibleSpecialCellMove != moveByCell(specialOne)) {
+              && (specialOne == SPECIAL_NOT_SET
+                  || possibleSpecialCellMove != moveByCell(specialOne))) {
             newScoreTwo += 3;
             newCells[currentCell] = 0;
             newSpecialTwo = (byte) currentCell;
@@ -345,20 +351,73 @@ public class NinePebbles implements GameState {
 
   @Override
   public float[] encode() {
-    float[] encoded = new float[23];
-    for (int i = 0; i < 18; i++) {
-      encoded[i] = (float) cells[i] / 162;
+    float[] encoded = new float[NinePebbles.NUM_FEATURES];
+
+    if (currentPlayer == Player.ONE) {
+      // Player special, one hot
+      if (specialOne != SPECIAL_NOT_SET) {
+        encoded[moveByCell(specialOne)] = 1;
+      }
+      // Opponent special, one hot
+      if (specialTwo != SPECIAL_NOT_SET) {
+        encoded[9 + moveByCell(specialTwo)] = 1;
+      }
+      // Player side
+      for (int i = 0; i < 9; i++) {
+        encoded[18 + i] = (float) cells[8 - i] / 81.0f;
+      }
+      // Opponent side
+      for (int i = 0; i < 9; i++) {
+        encoded[27 + i] = (float) cells[9 + i] / 81.0f;
+      }
+
+      // Score
+      encoded[36] = (float) scoreOne / 81f;
+      encoded[37] = (float) scoreTwo / 81f;
+    } else {
+      // Player special, one hot
+      if (specialTwo != SPECIAL_NOT_SET) {
+        encoded[moveByCell(specialTwo)] = 1;
+      }
+      // Opponent special, one hot
+      if (specialOne != SPECIAL_NOT_SET) {
+        encoded[9 + moveByCell(specialOne)] = 1;
+      }
+      // Player side
+      for (int i = 0; i < 9; i++) {
+        encoded[18 + i] = (float) cells[9 + i] / 81.0f;
+      }
+      // Opponent side
+      for (int i = 0; i < 9; i++) {
+        encoded[27 + i] = (float) cells[8 - i] / 81.0f;
+      }
+
+      // Score
+      encoded[36] = (float) scoreTwo / 81f;
+      encoded[37] = (float) scoreOne / 81f;
     }
-    // Special cells [2]
-    encoded[18] = specialOne == SPECIAL_NOT_SET ? -1 : (float) moveByCell(specialOne) / 8;
-    encoded[19] = specialTwo == SPECIAL_NOT_SET ? -1 : (float) moveByCell(specialTwo) / 8;
-
-    // Score [2]
-    encoded[20] = (float) scoreOne / 81f;
-    encoded[21] = (float) scoreTwo / 81f;
-
-    // Current Player [1]
-    encoded[22] = currentPlayer.ordinal();
+    NinePebblesMoveValuesEstimator estimator = new NinePebblesMoveValuesEstimator();
+    float[] moveValues = estimator.estimateMoveValues(this);
+    System.arraycopy(moveValues, 0, encoded, 38, moveValues.length);
     return encoded;
+  }
+
+  @Override
+  public Player getPotentialWinner() {
+    float playerOneAdjustedScore = scoreOne;
+    float playerTwoAdjustedScore = scoreTwo;
+    for (int move = 0; move < 9; move++) {
+      playerOneAdjustedScore += cells[move] / 3f;
+      playerTwoAdjustedScore += cells[9 + move] / 3f;
+    }
+    if (playerOneAdjustedScore > 81 && playerTwoAdjustedScore > 81) {
+      return Player.NONE;
+    } else if (playerOneAdjustedScore > 81) {
+      return Player.ONE;
+    } else if (playerTwoAdjustedScore > 81) {
+      return Player.TWO;
+    } else {
+      return Player.NONE;
+    }
   }
 }

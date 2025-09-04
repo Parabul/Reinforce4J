@@ -4,25 +4,26 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.truth.Correspondence;
 import com.google.inject.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 import org.junit.Test;
 import org.reinforce4j.constants.NumberOfExpansionsPerNode;
 import org.reinforce4j.constants.NumberOfFeatures;
+import org.reinforce4j.constants.NumberOfMoves;
 import org.reinforce4j.constants.NumberOfNodesToExpand;
-import org.reinforce4j.evaluation.Evaluator;
-import org.reinforce4j.evaluation.GameOverEvaluator;
-import org.reinforce4j.evaluation.OnnxEvaluator;
-import org.reinforce4j.evaluation.ZeroValueUniformEvaluator;
+import org.reinforce4j.evaluation.*;
 import org.reinforce4j.evaluation.batch.BatchOnnxEvaluator;
 import org.reinforce4j.games.*;
 import org.reinforce4j.montecarlo.tasks.ExecutionCoordinator;
+import org.reinforce4j.utils.TestUtils;
 import org.reinforce4j.utils.tfrecord.TensorFlowUtils;
 import org.tensorflow.example.Example;
 
 public class TreeSearchTest {
 
-//  @Test
-  public void rootStateEvalShouldMatchExpectedUniformTicTacToe() throws InterruptedException {
+  @Test
+  public void exploreAllTicTacToe() throws InterruptedException {
     Injector injector =
         Guice.createInjector(
             new AbstractModule() {
@@ -52,7 +53,17 @@ public class TreeSearchTest {
 
     ExecutionCoordinator executionCoordinator = injector.getInstance(ExecutionCoordinator.class);
 
-    Queue<Example> examples = treeSearch.explore(new TicTacToe());
+    int n = 20000;
+    List<TicTacToe> gameStates = new ArrayList<>(n);
+    for (int i = 0; i < n; i++) {
+      TicTacToe state = TestUtils.getRandomTicTacToeState();
+      if (state.isGameOver()) {
+        continue;
+      }
+      gameStates.add(state);
+    }
+
+    Queue<Example> examples = treeSearch.exploreAll(gameStates);
 
     TicTacToe state = (new TicTacToe()).move(4).move(1).move(0).move(2);
 
@@ -257,7 +268,8 @@ public class TreeSearchTest {
         assertThat(
                 example.getFeatures().getFeatureMap().get("output").getFloatList().getValueList())
             .comparingElementsUsing(Correspondence.tolerance(0.1))
-            .containsExactly(0.0030948557, 0.11, 0.11, 0.11, 0.11, 0.11, 0.11, 0.110, 0.11, 0.11).inOrder();
+            .containsExactly(0.0030948557, 0.11, 0.11, 0.11, 0.11, 0.11, 0.11, 0.110, 0.11, 0.11)
+            .inOrder();
       }
 
       if (example
@@ -279,10 +291,79 @@ public class TreeSearchTest {
                 0.1273585,
                 0.0,
                 0.12264151,
-                0.1273585).inOrder();
+                0.1273585)
+            .inOrder();
       }
     }
     assertThat(hitRoot).isTrue();
+    assertThat(hitState).isTrue();
+    executionCoordinator.shutdown();
+  }
+
+  @Test
+  public void rootStateEvalShouldMatchExpectedOnnxNinePebbles() throws InterruptedException {
+    Injector injector =
+        Guice.createInjector(
+            new AbstractModule() {
+              @Override
+              protected void configure() {
+                install(new NinePebblesModule());
+                install(new MonteCarloTreeSearchModule());
+                bind(Evaluator.class)
+                    .annotatedWith(MonteCarloTreeSearchModule.DefaultEvaluator.class)
+                    .toInstance(
+                        new ExtendedGameOverEvaluator(
+                            new OnnxEvaluator(
+                                OnnxEvaluator.NINE_PEBBLES_V0,
+                                new NumberOfFeatures(NinePebbles.NUM_FEATURES),
+                                new NumberOfMoves(NinePebbles.NUM_MOVES))));
+              }
+
+              @Provides
+              @Singleton
+              public NumberOfExpansionsPerNode provideNumberOfExpansionsPerNode() {
+                return new NumberOfExpansionsPerNode(2000);
+              }
+
+              @Provides
+              @Singleton
+              public NumberOfNodesToExpand provideNumberOfNodesToExpand() {
+                return new NumberOfNodesToExpand(1);
+              }
+            });
+    TreeSearch treeSearch = injector.getInstance(TreeSearch.class);
+
+    ExecutionCoordinator executionCoordinator = injector.getInstance(ExecutionCoordinator.class);
+
+    NinePebbles state = (new NinePebbles()).move(5).move(6).move(7).move(8);
+
+    Queue<Example> examples = treeSearch.explore(state);
+    System.out.println(state);
+
+    System.out.println(examples.peek());
+
+    boolean hitState = false;
+    for (Example example : examples) {
+      assertThat(example.getFeatures().getFeatureMap().keySet()).containsExactly("input", "output");
+      assertThat(example.getFeatures().getFeatureMap().get("input").getFloatList().getValueList())
+          .hasSize(NinePebbles.NUM_FEATURES);
+      assertThat(example.getFeatures().getFeatureMap().get("output").getFloatList().getValueList())
+          .hasSize(10);
+
+      if (example
+          .getFeatures()
+          .getFeatureMap()
+          .get("input")
+          .equals(TensorFlowUtils.floatList(state.encode()))) {
+        hitState = true;
+        assertThat(
+                example.getFeatures().getFeatureMap().get("output").getFloatList().getValueList())
+            .comparingElementsUsing(Correspondence.tolerance(0.1))
+            .containsExactly(
+                    0.0025136238, 0.19, 0.1595, 0.109, 0.098, 0.113, 0.112, 0.127, 0.0915, 0.0)
+            .inOrder();
+      }
+    }
     assertThat(hitState).isTrue();
     executionCoordinator.shutdown();
   }

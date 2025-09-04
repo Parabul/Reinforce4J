@@ -33,7 +33,7 @@ def alpha_zero_loss(y_true, y_pred):
 # Function to decode the TFRecord data
 def decode_fn(record_bytes):
     feature_description = {
-        "input": tf.io.FixedLenFeature([23], dtype=tf.float32),
+        "input": tf.io.FixedLenFeature([47], dtype=tf.float32),
         "output": tf.io.FixedLenFeature([10], dtype=tf.float32)
     }
     example = tf.io.parse_single_example(record_bytes, feature_description)
@@ -45,18 +45,18 @@ files = list(files.as_numpy_iterator())
 decoded_training_dataset = tf.data.TFRecordDataset(files).map(decode_fn).batch(32)
 
 # Define the model architecture
-input_layer = layers.Input(shape=(23,), name = "input_1")
+input_layer = layers.Input(shape=(47,), name = "input_1")
 
 # Hidden layers
-hidden_layer1 = layers.Dense(128, activation='relu')(input_layer)
-hidden_layer2 = layers.Dense(128, activation='relu')(hidden_layer1)
-hidden_layer3 = layers.Dense(128, activation='relu')(hidden_layer2)
+hidden_layer1 = layers.Dense(32, activation='relu')(input_layer)
+hidden_layer2 = layers.Dense(16, activation='relu')(hidden_layer1)
+# hidden_layer3 = layers.Dense(128, activation='relu')(hidden_layer2)
 
 # Value output (1 neuron)
-value_output = layers.Dense(1, activation='tanh', name='value_output')(hidden_layer3)
+value_output = layers.Dense(1, activation='tanh', name='value_output')(hidden_layer2)
 
 # Policy output (9 neurons, one for each possible move)
-policy_output = layers.Dense(9, activation='softmax', name='policy_output')(hidden_layer3)
+policy_output = layers.Dense(9, activation='softmax', name='policy_output')(hidden_layer2)
 
 # Create the model
 model = models.Model(inputs=input_layer, outputs={'value_output':value_output, 'policy_output':policy_output})
@@ -72,13 +72,13 @@ model.summary()
 callback = callbacks.EarlyStopping(monitor='loss', min_delta=0.0001, patience=3)
 
 # Train the model
-model.fit(decoded_training_dataset, callbacks=[callback], epochs=15)
+model.fit(decoded_training_dataset, callbacks=[callback], epochs=45)
 
 # Make predictions
 np.set_printoptions(precision=3, suppress=True)
-print(model.predict(np.array([[0.055555556,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.375,0.5,1,0.8888889,1]])))
-print(model.predict(np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.375, 0.5, 1, 1, 1]])))
-print(model.predict(np.array([[0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,-1.0,-1.0,0.0,0.0,0.0]])))
+# print(model.predict(np.array([[0.055555556,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.375,0.5,1,0.8888889,1]])))
+# print(model.predict(np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.375, 0.5, 1, 1, 1]])))
+# print(model.predict(np.array([[0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,0.055555556,-1.0,-1.0,0.0,0.0,0.0]])))
 
 # Save the model
 model.export(args.Output)

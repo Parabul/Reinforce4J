@@ -91,7 +91,8 @@ public class ExtendedGameOverEvaluator implements Evaluator {
 
       toDelegate.add(envelope);
     }
-
-    delegate.evaluate(toDelegate.toArray(new EvaluatedGameState[toDelegate.size()]));
+    if (!toDelegate.isEmpty()) {
+      delegate.evaluate(toDelegate.toArray(new EvaluatedGameState[toDelegate.size()]));
+    }
   }
 }

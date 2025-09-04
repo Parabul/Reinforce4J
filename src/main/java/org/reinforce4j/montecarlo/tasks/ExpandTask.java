@@ -23,7 +23,6 @@ import org.tensorflow.example.Example;
 public class ExpandTask implements Runnable {
 
   private static final Logger logger = LoggerFactory.getLogger(ExpandTask.class);
-
   private final ExpandTaskFactory expandTaskFactory;
   private final ExpansionStrategy expansionStrategy;
   private final Evaluator evaluator;
@@ -78,22 +77,20 @@ public class ExpandTask implements Runnable {
         logger.warn("--------------------------------------------------------");
         logger.warn("No longer accepting expansions!");
         logger.warn("--------------------------------------------------------");
-
-        return;
       }
 
-      for (TreeNode child : currentNode.getChildStates()) {
-        if (child == null) {
-          continue;
-        }
-        if (child.state().isGameOver()) {
-          continue;
-        }
-        expandedNodes.offer(child.toExample());
-        if (Math.random() < 0.5) {
-          executor.submit(expandTaskFactory.create(child.state(), expansionsRemaining));
-        }
-      }
+      //      for (TreeNode child : currentNode.getChildStates()) {
+      //        if (child == null) {
+      //          continue;
+      //        }
+      //        if (child.state().isGameOver()) {
+      //          continue;
+      //        }
+      //        expandedNodes.offer(child.toExample());
+      //        if (Math.random() < 0.5) {
+      //          executor.submit(expandTaskFactory.create(child.state(), expansionsRemaining));
+      //        }
+      //      }
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
     }
@@ -101,8 +98,8 @@ public class ExpandTask implements Runnable {
 
   private void expand(TreeNode currentNode) {
     Deque<Pair<TreeNode, AverageValue>> backPropagationStack = new ArrayDeque<>();
-
-    while (!currentNode.state().isGameOver()) {
+    int expansions = 0;
+    while (!currentNode.state().isGameOver() && expansions++ < 200) {
       // If child nodes are visited for the first time, collect average value.
       Optional<AverageValue> childValue = currentNode.initChildren(evaluator);
       if (childValue.isPresent()) {
@@ -116,7 +113,10 @@ public class ExpandTask implements Runnable {
     }
 
     // Game Over: a leaf should have a winner.
-    Player winner = currentNode.state().getWinner();
+    Player winner =
+        currentNode.state().isGameOver()
+            ? currentNode.state().getWinner()
+            : currentNode.state().getPotentialWinner();
 
     AverageValue accumulatedValue = new AverageValue();
     // Draw has no value, otherwise 1 to the winner.

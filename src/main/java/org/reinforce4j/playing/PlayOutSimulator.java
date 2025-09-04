@@ -8,7 +8,7 @@ import org.reinforce4j.core.Player;
 
 public class PlayOutSimulator {
 
-  private static final int MAX_MOVES = 500;
+  private static final int MAX_MOVES = 5000;
 
   private final EnumMap<Player, StateBasedStrategy> strategies;
   private final Supplier<GameState> initialStateSupplier;
@@ -34,7 +34,8 @@ public class PlayOutSimulator {
       }
       state = state.move(move);
       if (moves++ > MAX_MOVES) {
-        throw new IllegalStateException("Too many moves");
+        return Player.NONE;
+        //        throw new IllegalStateException("Too many moves");
       }
     }
 

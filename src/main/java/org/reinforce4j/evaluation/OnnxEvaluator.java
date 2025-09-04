@@ -18,6 +18,9 @@ public class OnnxEvaluator implements Evaluator {
   public static final String TIC_TAC_TOE_V0 =
           TensorflowEvaluator.class.getResource("/onnx/models/tic_tac_toe_v0.onnx").getPath();
 
+  public static final String NINE_PEBBLES_V0 =
+          TensorflowEvaluator.class.getResource("/onnx/models/nine_pebbles_v0.onnx").getPath();
+
   private static final String INPUT = "input_1";
   private static final String VALUE_OUTPUT = "value_output";
   private static final String POLICY_OUTPUT = "policy_output";
@@ -36,7 +39,8 @@ public class OnnxEvaluator implements Evaluator {
     OrtSession.SessionOptions sessionOptions = new OrtSession.SessionOptions();
     try {
       //    sessionOptions.addCUDA(0);
-      sessionOptions.addTensorrt(0);
+//      sessionOptions.addTensorrt(0);
+      sessionOptions.addCPU(true);
       session = env.createSession(modelPath, sessionOptions);
     } catch (OrtException e) {
       throw new RuntimeException(e);

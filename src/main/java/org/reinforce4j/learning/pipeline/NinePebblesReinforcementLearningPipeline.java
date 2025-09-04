@@ -7,14 +7,18 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Queue;
+import java.util.Set;
 import org.reinforce4j.constants.NumberOfExpansionsPerNode;
 import org.reinforce4j.constants.NumberOfFeatures;
+import org.reinforce4j.constants.NumberOfMoves;
 import org.reinforce4j.constants.NumberOfNodesToExpand;
-import org.reinforce4j.evaluation.Evaluator;
-import org.reinforce4j.evaluation.GameOverEvaluator;
-import org.reinforce4j.evaluation.OnnxEvaluator;
-import org.reinforce4j.evaluation.ZeroValueUniformEvaluator;
+import org.reinforce4j.core.GameState;
+import org.reinforce4j.evaluation.*;
 import org.reinforce4j.evaluation.batch.BatchOnnxEvaluator;
+import org.reinforce4j.exploration.BloomMiniBatchKMeansDiverseSet;
+import org.reinforce4j.exploration.DiverseSetGenerator;
+import org.reinforce4j.exploration.RandomStateGenerator;
+import org.reinforce4j.exploration.RandomWalk;
 import org.reinforce4j.games.Connect4;
 import org.reinforce4j.games.NinePebbles;
 import org.reinforce4j.games.NinePebblesModule;
@@ -39,6 +43,15 @@ public class NinePebblesReinforcementLearningPipeline {
     logger.info("Start");
     stopwatch.start();
 
+    BloomMiniBatchKMeansDiverseSet diverseSet =
+        new BloomMiniBatchKMeansDiverseSet(10_000, 100, 3_000_000, 50_000, 1_000);
+    RandomStateGenerator stateGenerator =
+        new DiverseSetGenerator(
+            diverseSet, new RandomWalk(new NinePebbles(), NinePebbles.NUM_MOVES), 35_000);
+    Set<GameState> states = stateGenerator.get();
+
+    logger.info("Generated " + states.size() + " states");
+
     Injector injector =
         Guice.createInjector(
             new AbstractModule() {
@@ -49,7 +62,8 @@ public class NinePebblesReinforcementLearningPipeline {
                 bind(Evaluator.class)
                     .annotatedWith(MonteCarloTreeSearchModule.DefaultEvaluator.class)
                     .toInstance(
-                        new GameOverEvaluator(new ZeroValueUniformEvaluator(NinePebbles.NUM_MOVES)));
+                        new GameOverEvaluator(
+                            new ZeroValueUniformEvaluator(NinePebbles.NUM_MOVES)));
               }
 
               @Provides
@@ -69,16 +83,16 @@ public class NinePebblesReinforcementLearningPipeline {
 
     TreeSearch treeSearch = injector.getInstance(TreeSearch.class);
 
-    for (int i = 1; i < 10; i++) {
-      Queue<Example> examples = treeSearch.explore(new NinePebbles());
+    //    for (int i = 1; i < 5; i++) {
+    Queue<Example> examples = treeSearch.exploreAll(states);
 
-      try (DataOutputStream outputStream =
-          new DataOutputStream(new FileOutputStream(BASE_PATH + "training-" + i + ".tfrecord"))) {
-        TFRecordWriter writer = new TFRecordWriter(outputStream);
-        writer.writeAll(examples);
-        examples.clear();
-      }
+    try (DataOutputStream outputStream =
+        new DataOutputStream(new FileOutputStream(BASE_PATH + "training-0.tfrecord"))) {
+      TFRecordWriter writer = new TFRecordWriter(outputStream);
+      writer.writeAll(examples);
+      examples.clear();
     }
+    //    }
 
     int version = 1;
 
@@ -96,67 +110,78 @@ public class NinePebblesReinforcementLearningPipeline {
 
   private static void retrain() throws IOException, InterruptedException {
 
-    Stopwatch stopwatch = Stopwatch.createUnstarted();
-    logger.info("Start");
-    stopwatch.start();
+      Stopwatch stopwatch = Stopwatch.createUnstarted();
+      logger.info("Start");
+      stopwatch.start();
 
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                install(new NinePebblesModule());
-                install(new MonteCarloTreeSearchModule());
-                bind(Evaluator.class)
-                    .annotatedWith(MonteCarloTreeSearchModule.DefaultEvaluator.class)
-                    .toInstance(
-                        new GameOverEvaluator(
-                            new BatchOnnxEvaluator(
-                                OnnxEvaluator.CONNECT4_V0,
-                                new NumberOfFeatures(Connect4.NUM_FEATURES),
-                                true)));
-              }
+      BloomMiniBatchKMeansDiverseSet diverseSet =
+              new BloomMiniBatchKMeansDiverseSet(10_000, 100, 3_000_000, 50_000, 1_000);
+      RandomStateGenerator stateGenerator =
+              new DiverseSetGenerator(
+                      diverseSet, new RandomWalk(new NinePebbles(), NinePebbles.NUM_MOVES), 35_000);
+      Set<GameState> states = stateGenerator.get();
 
-              @Provides
-              @Singleton
-              public NumberOfExpansionsPerNode provideNumberOfExpansionsPerNode() {
-                return new NumberOfExpansionsPerNode(1_000);
-              }
+      logger.info("Generated " + states.size() + " states");
 
-              @Provides
-              @Singleton
-              public NumberOfNodesToExpand provideNumberOfNodesToExpand() {
-                return new NumberOfNodesToExpand(100_000);
-              }
-            });
+      Injector injector =
+              Guice.createInjector(
+                      new AbstractModule() {
+                          @Override
+                          protected void configure() {
+                              install(new NinePebblesModule());
+                              install(new MonteCarloTreeSearchModule());
+                              bind(Evaluator.class)
+                                      .annotatedWith(MonteCarloTreeSearchModule.DefaultEvaluator.class)
+                                      .toInstance(
+                                              new ExtendedGameOverEvaluator(
+                                                      new BatchOnnxEvaluator(
+                                                              OnnxEvaluator.NINE_PEBBLES_V0,
+                                                              new NumberOfFeatures(NinePebbles.NUM_FEATURES), false)));
+//                                      .toInstance(new ExtendedGameOverEvaluator(
+//                                              new OnnxEvaluator(
+//                                                      OnnxEvaluator.NINE_PEBBLES_V0,
+//                                                      new NumberOfFeatures(NinePebbles.NUM_FEATURES),
+//                                                      new NumberOfMoves(NinePebbles.NUM_MOVES))));
+                          }
 
-    ExecutionCoordinator executionCoordinator = injector.getInstance(ExecutionCoordinator.class);
+                          @Provides
+                          @Singleton
+                          public NumberOfExpansionsPerNode provideNumberOfExpansionsPerNode() {
+                              return new NumberOfExpansionsPerNode(2_000);
+                          }
 
-    TreeSearch treeSearch = injector.getInstance(TreeSearch.class);
+                          @Provides
+                          @Singleton
+                          public NumberOfNodesToExpand provideNumberOfNodesToExpand() {
+                              return new NumberOfNodesToExpand(20_000);
+                          }
+                      });
 
-    for (int i = 1; i < 10; i++) {
-      Queue<Example> examples = treeSearch.explore(new NinePebbles());
+      ExecutionCoordinator executionCoordinator = injector.getInstance(ExecutionCoordinator.class);
+
+      TreeSearch treeSearch = injector.getInstance(TreeSearch.class);
+
+      Queue<Example> examples = treeSearch.exploreAll(states);
 
       try (DataOutputStream outputStream =
-          new DataOutputStream(new FileOutputStream(BASE_PATH + "training-" + i + ".tfrecord"))) {
-        TFRecordWriter writer = new TFRecordWriter(outputStream);
-        writer.writeAll(examples);
-        examples.clear();
+                   new DataOutputStream(new FileOutputStream(BASE_PATH + "training-1.tfrecord"))) {
+          TFRecordWriter writer = new TFRecordWriter(outputStream);
+          writer.writeAll(examples);
+          examples.clear();
       }
-    }
 
-    int version = 1;
+      int version = 2;
 
-    ModelTrainerExecutor modelTrainerExecutor =
-        new ModelTrainerExecutor(
-            BASE_PATH,
-            ClassLoader.getSystemResource("tensorflow/train_nine_pebbles.py").getPath(),
-            Paths.get(BASE_PATH, "training-*.tfrecord").toString(),
-            modelPath(version));
-    modelTrainerExecutor.execute();
+      ModelTrainerExecutor modelTrainerExecutor =
+              new ModelTrainerExecutor(
+                      BASE_PATH,
+                      ClassLoader.getSystemResource("tensorflow/train_nine_pebbles.py").getPath(),
+                      Paths.get(BASE_PATH, "training-1.tfrecord").toString(),
+                      modelPath(version));
+      modelTrainerExecutor.execute();
 
-    executionCoordinator.shutdown();
-    logger.info("Training completed on version: {} ", version);
+      executionCoordinator.shutdown();
+      logger.info("Training completed on version: {} ", version);
   }
 
   private static String modelPath(int version) {
@@ -164,6 +189,7 @@ public class NinePebblesReinforcementLearningPipeline {
   }
 
   public static void main(String[] args) throws Exception {
-    train();
+//    train();
+      retrain();
   }
 }

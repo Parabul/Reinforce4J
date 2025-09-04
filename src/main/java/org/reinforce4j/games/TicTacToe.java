@@ -7,17 +7,15 @@ import org.reinforce4j.core.Player;
 
 public class TicTacToe implements GameState {
 
+  public static final int NUM_MOVES = 9;
+  public static final int NUM_FEATURES = 9;
   private static final byte PLAYER_ONE_VALUE = 1;
   private static final byte PLAYER_TWO_VALUE = -1;
   private static final int SIZE = 3;
-
   private final byte[][] board = new byte[SIZE][SIZE];
   private final Player currentPlayer;
   private final boolean isGameOver;
   private final Player winner;
-
-  public static final int NUM_MOVES = 9;
-  public static final int NUM_FEATURES = 9;
 
   public TicTacToe() {
     this(new byte[SIZE][SIZE], Player.ONE, false, null);
@@ -105,6 +103,11 @@ public class TicTacToe implements GameState {
       buffer[move] = board[i][j];
     }
     return buffer;
+  }
+
+  @Override
+  public Player getPotentialWinner() {
+    return Player.NONE;
   }
 
   @Override
