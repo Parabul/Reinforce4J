@@ -87,10 +87,4 @@ public class AverageValue {
         .add("support", support)
         .toString();
   }
-
-  public AverageValue reset() {
-    playerOneValue = 0;
-    support = 0;
-    return this;
-  }
 }

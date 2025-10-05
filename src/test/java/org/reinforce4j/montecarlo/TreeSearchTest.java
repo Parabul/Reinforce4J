@@ -314,7 +314,7 @@ public class TreeSearchTest {
                     .toInstance(
                         new ExtendedGameOverEvaluator(
                             new OnnxEvaluator(
-                                OnnxEvaluator.NINE_PEBBLES_V0,
+                                OnnxEvaluator.NINE_PEBBLES_V2,
                                 new NumberOfFeatures(NinePebbles.NUM_FEATURES),
                                 new NumberOfMoves(NinePebbles.NUM_MOVES))));
               }
@@ -322,7 +322,7 @@ public class TreeSearchTest {
               @Provides
               @Singleton
               public NumberOfExpansionsPerNode provideNumberOfExpansionsPerNode() {
-                return new NumberOfExpansionsPerNode(2000);
+                return new NumberOfExpansionsPerNode(10000);
               }
 
               @Provides
@@ -335,7 +335,7 @@ public class TreeSearchTest {
 
     ExecutionCoordinator executionCoordinator = injector.getInstance(ExecutionCoordinator.class);
 
-    NinePebbles state = (new NinePebbles()).move(5).move(6).move(7).move(8);
+    NinePebbles state = (new NinePebbles()).move(8).move(1).move(7).move(3).move(6).move(3).move(4).move(1).move(8).move(8);
 
     Queue<Example> examples = treeSearch.explore(state);
     System.out.println(state);
@@ -360,11 +360,80 @@ public class TreeSearchTest {
                 example.getFeatures().getFeatureMap().get("output").getFloatList().getValueList())
             .comparingElementsUsing(Correspondence.tolerance(0.1))
             .containsExactly(
-                    0.0025136238, 0.19, 0.1595, 0.109, 0.098, 0.113, 0.112, 0.127, 0.0915, 0.0)
+                    0.83401847, 0.0199, 0.0202, 0.0208, 0.0199, 0.0209, 0.0214, 0.0202, 0.0368, 0.8199)
             .inOrder();
       }
     }
     assertThat(hitState).isTrue();
     executionCoordinator.shutdown();
   }
+
+
+    @Test
+    public void rootStateEvalShouldMatchExpectedOnnxNinePebblesV2() throws InterruptedException {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule() {
+                            @Override
+                            protected void configure() {
+                                install(new NinePebblesModule());
+                                install(new MonteCarloTreeSearchModule());
+                                bind(Evaluator.class)
+                                        .annotatedWith(MonteCarloTreeSearchModule.DefaultEvaluator.class)
+                                        .toInstance(
+                                                new ExtendedGameOverEvaluator(
+                                                        new OnnxEvaluator(
+                                                                OnnxEvaluator.NINE_PEBBLES_V2,
+                                                                new NumberOfFeatures(NinePebbles.NUM_FEATURES),
+                                                                new NumberOfMoves(NinePebbles.NUM_MOVES))));
+                            }
+
+                            @Provides
+                            @Singleton
+                            public NumberOfExpansionsPerNode provideNumberOfExpansionsPerNode() {
+                                return new NumberOfExpansionsPerNode(2000);
+                            }
+
+                            @Provides
+                            @Singleton
+                            public NumberOfNodesToExpand provideNumberOfNodesToExpand() {
+                                return new NumberOfNodesToExpand(1);
+                            }
+                        });
+        TreeSearch treeSearch = injector.getInstance(TreeSearch.class);
+
+        ExecutionCoordinator executionCoordinator = injector.getInstance(ExecutionCoordinator.class);
+
+        NinePebbles state = (new NinePebbles());
+
+        Queue<Example> examples = treeSearch.explore(state);
+        System.out.println(state);
+
+        System.out.println(examples.peek());
+
+        boolean hitState = false;
+        for (Example example : examples) {
+            assertThat(example.getFeatures().getFeatureMap().keySet()).containsExactly("input", "output");
+            assertThat(example.getFeatures().getFeatureMap().get("input").getFloatList().getValueList())
+                    .hasSize(NinePebbles.NUM_FEATURES);
+            assertThat(example.getFeatures().getFeatureMap().get("output").getFloatList().getValueList())
+                    .hasSize(10);
+
+            if (example
+                    .getFeatures()
+                    .getFeatureMap()
+                    .get("input")
+                    .equals(TensorFlowUtils.floatList(state.encode()))) {
+                hitState = true;
+                assertThat(
+                        example.getFeatures().getFeatureMap().get("output").getFloatList().getValueList())
+                        .comparingElementsUsing(Correspondence.tolerance(0.001))
+                        .containsExactly(
+                                0.83401847, 0.0199, 0.0202, 0.0208, 0.0199, 0.0209, 0.0214, 0.0202, 0.0368, 0.8199)
+                        .inOrder();
+            }
+        }
+        assertThat(hitState).isTrue();
+        executionCoordinator.shutdown();
+    }
 }

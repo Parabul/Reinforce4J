@@ -42,15 +42,32 @@ public class EvaluatorsComparatorTest {
     EvaluatorsComparator evaluatorsComparator =
         new EvaluatorsComparator(new NumberOfMoves(NinePebbles.NUM_MOVES), NinePebbles::new);
     Evaluator incumbent =
-            new ExtendedGameOverEvaluator(new OnnxEvaluator(
-                    "/home/anarbek/tmp/nine_pebbles_test/nine_pebbles_v0.onnx",
-                    new NumberOfFeatures(NinePebbles.NUM_FEATURES),
-                    new NumberOfMoves(NinePebbles.NUM_MOVES)));
+        new ExtendedGameOverEvaluator(new ZeroValueUniformEvaluator(NinePebbles.NUM_MOVES));
     Evaluator candidate =
-            new ExtendedGameOverEvaluator(new OnnxEvaluator(
-            "/home/anarbek/tmp/nine_pebbles_test/nine_pebbles_v2.onnx",
-            new NumberOfFeatures(NinePebbles.NUM_FEATURES),
-            new NumberOfMoves(NinePebbles.NUM_MOVES)));
+        new ExtendedGameOverEvaluator(
+            new OnnxEvaluator(
+                "/home/anarbek/tmp/nine_pebbles_test/nine_pebbles_v4.onnx",
+                new NumberOfFeatures(NinePebbles.NUM_FEATURES),
+                new NumberOfMoves(NinePebbles.NUM_MOVES)));
+    assertThat(evaluatorsComparator.candidateIsBetter(incumbent, candidate)).isTrue();
+  }
+
+  @Test
+  public void nnEvaluatorBetterThanRandomNinePebblesOnnx() {
+    EvaluatorsComparator evaluatorsComparator =
+        new EvaluatorsComparator(new NumberOfMoves(NinePebbles.NUM_MOVES), NinePebbles::new);
+    Evaluator incumbent =
+        new ExtendedGameOverEvaluator(
+            new OnnxEvaluator(
+                "/home/anarbek/tmp/nine_pebbles_test/nine_pebbles_v4.onnx",
+                new NumberOfFeatures(NinePebbles.NUM_FEATURES),
+                new NumberOfMoves(NinePebbles.NUM_MOVES)));
+    Evaluator candidate =
+        new ExtendedGameOverEvaluator(
+            new OnnxEvaluator(
+                OnnxEvaluator.NINE_PEBBLES_V0,
+                new NumberOfFeatures(NinePebbles.NUM_FEATURES),
+                new NumberOfMoves(NinePebbles.NUM_MOVES)));
     assertThat(evaluatorsComparator.candidateIsBetter(incumbent, candidate)).isTrue();
   }
 

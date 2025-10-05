@@ -21,6 +21,13 @@ public class OnnxEvaluator implements Evaluator {
   public static final String NINE_PEBBLES_V0 =
           TensorflowEvaluator.class.getResource("/onnx/models/nine_pebbles_v0.onnx").getPath();
 
+  public static final String NINE_PEBBLES_V1 =
+          TensorflowEvaluator.class.getResource("/onnx/models/nine_pebbles_v1.onnx").getPath();
+
+  public static final String NINE_PEBBLES_V2 =
+          TensorflowEvaluator.class.getResource("/onnx/models/nine_pebbles_v2.onnx").getPath();
+
+
   private static final String INPUT = "input_1";
   private static final String VALUE_OUTPUT = "value_output";
   private static final String POLICY_OUTPUT = "policy_output";

@@ -135,13 +135,8 @@ public class NinePebblesReinforcementLearningPipeline {
                                       .toInstance(
                                               new ExtendedGameOverEvaluator(
                                                       new BatchOnnxEvaluator(
-                                                              OnnxEvaluator.NINE_PEBBLES_V0,
+                                                              OnnxEvaluator.NINE_PEBBLES_V2,
                                                               new NumberOfFeatures(NinePebbles.NUM_FEATURES), false)));
-//                                      .toInstance(new ExtendedGameOverEvaluator(
-//                                              new OnnxEvaluator(
-//                                                      OnnxEvaluator.NINE_PEBBLES_V0,
-//                                                      new NumberOfFeatures(NinePebbles.NUM_FEATURES),
-//                                                      new NumberOfMoves(NinePebbles.NUM_MOVES))));
                           }
 
                           @Provides
@@ -164,19 +159,19 @@ public class NinePebblesReinforcementLearningPipeline {
       Queue<Example> examples = treeSearch.exploreAll(states);
 
       try (DataOutputStream outputStream =
-                   new DataOutputStream(new FileOutputStream(BASE_PATH + "training-1.tfrecord"))) {
+                   new DataOutputStream(new FileOutputStream(BASE_PATH + "training-4.tfrecord"))) {
           TFRecordWriter writer = new TFRecordWriter(outputStream);
           writer.writeAll(examples);
           examples.clear();
       }
 
-      int version = 2;
+      int version = 4;
 
       ModelTrainerExecutor modelTrainerExecutor =
               new ModelTrainerExecutor(
                       BASE_PATH,
                       ClassLoader.getSystemResource("tensorflow/train_nine_pebbles.py").getPath(),
-                      Paths.get(BASE_PATH, "training-1.tfrecord").toString(),
+                      Paths.get(BASE_PATH, "training-4.tfrecord").toString(),
                       modelPath(version));
       modelTrainerExecutor.execute();
 

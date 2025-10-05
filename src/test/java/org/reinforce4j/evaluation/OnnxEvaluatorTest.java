@@ -4,6 +4,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import ai.onnxruntime.OrtException;
 import com.google.common.base.Stopwatch;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.reinforce4j.constants.NumberOfFeatures;
 import org.reinforce4j.constants.NumberOfMoves;
@@ -69,7 +71,7 @@ class OnnxEvaluatorTest {
   void evaluateNinePebbles() {
     OnnxEvaluator evaluator =
         new OnnxEvaluator(
-            OnnxEvaluator.NINE_PEBBLES_V0,
+            OnnxEvaluator.NINE_PEBBLES_V2,
             new NumberOfFeatures(NinePebbles.NUM_FEATURES),
             new NumberOfMoves(NinePebbles.NUM_MOVES));
 
@@ -81,26 +83,20 @@ class OnnxEvaluatorTest {
     EvaluatedGameState node2 =
         EvaluatedGameStateEnvelope.create(game2, new StateEvaluation(NinePebbles.NUM_MOVES));
 
-    Stopwatch stopwatch = Stopwatch.createStarted();
-    logger.info("Start");
-    evaluator.evaluate(node1, null);
-    evaluator.evaluate(node2, null);
-    logger.info("End: " + stopwatch.stop());
+    evaluator.evaluate(node1, node2);
 
-    assertThat(node1.evaluation().getValue()).isWithin(TOLERANCE).of(-0.0016163101f);
+    assertThat(node1.evaluation().getValue()).isWithin(TOLERANCE).of(-0.004695917f);
     assertThat(node1.evaluation().getPolicy())
         .usingTolerance(TOLERANCE)
         .containsExactly(
-                0.102689035, 0.05709417, 0.15461062, 0.1141636, 0.09160823, 0.11038341, 0.09901501, 0.19622673, 0.07420929)
+                0.04805885, 0.22749093, 0.013468214, 0.17588913, 0.23200665, 0.1259972, 0.022932446, 0.0069662756, 0.14719029)
         .inOrder();
 
-    assertThat(node2.evaluation().getValue()).isWithin(TOLERANCE).of(-0.002835139f);
+    assertThat(node2.evaluation().getValue()).isWithin(TOLERANCE).of(0.056121465f);
     assertThat(node2.evaluation().getPolicy())
         .usingTolerance(TOLERANCE)
         .containsExactly(
-                0.11414174, 0.04821687, 0.111130424, 0.13192761, 0.110194065, 0.078821234, 0.092666365, 0.18042597, 0.13247573)
+                0.089444205, 0.010340182, 0.08174314, 0.5893696, 0.13320167, 1.2439788E-4, 0.07818858, 0.011549589, 0.0060386327)
         .inOrder();
-
-
   }
 }
